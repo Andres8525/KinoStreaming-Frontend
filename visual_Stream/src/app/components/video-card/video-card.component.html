@@ -1,0 +1,35 @@
+<a [routerLink]="['/watch', video.id]" class="card" [style.animation-delay.ms]="animationDelay">
+  <!-- Thumbnail -->
+  <div class="card-thumbnail" [style.background]="gradientStyle">
+    <img class="thumbnail-image absolute inset-0 h-full w-full object-cover" [class.image-failed]="imageFailed" [src]="video.thumbnail" [alt]="video.title" loading="lazy" (error)="imageFailed = true"/>
+    <div class="thumb-pattern"></div>
+    <div class="play-overlay">
+      <div class="play-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+    <div class="duration-badge">{{ video.duration }}</div>
+  </div>
+
+  <!-- Info -->
+  <div class="card-info">
+    <div class="card-meta-top">
+      <span class="category-tag" [style.background]="categoryBg" [style.color]="categoryColor">
+        {{ video.category }}
+      </span>
+      <span class="views-text">{{ video.views }} vistas</span>
+    </div>
+    <h3 class="card-title">{{ video.title }}</h3>
+    <div class="card-creator">
+      <div class="creator-avatar" [style.background]="'linear-gradient(135deg, ' + categoryColor + ', #FF8A6A)'">
+        {{ video.creatorAvatar }}
+      </div>
+      <div class="creator-info">
+        <span class="creator-name">{{ video.creator }}</span>
+        <span class="time-ago">{{ video.timeAgo }}</span>
+      </div>
+    </div>
+  </div>
+</a>

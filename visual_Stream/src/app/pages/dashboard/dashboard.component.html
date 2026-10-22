@@ -1,0 +1,215 @@
+<div class="dashboard">
+
+  <!-- ====== HERO SECTION ====== -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge animate-fade-in">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="badge-icon">
+            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/>
+          </svg>
+          Destacado por la comunidad
+        </div>
+        <h1 class="hero-title animate-slide-up">{{ featuredVideo().title }}</h1>
+        <p class="hero-description animate-slide-up delay-100">{{ featuredVideo().description }}</p>
+        <div class="hero-meta animate-slide-up delay-200">
+          <div class="hero-creator">
+            <div class="hero-creator-avatar">MS</div>
+            <span class="hero-creator-name">{{ featuredVideo().creator }}</span>
+          </div>
+          <span class="hero-separator">•</span>
+          <span class="hero-stat">{{ featuredVideo().views }}</span>
+          <span class="hero-separator">•</span>
+          <span class="hero-category-badge">{{ featuredVideo().category }}</span>
+        </div>
+        <div class="hero-actions animate-slide-up delay-300">
+          <a [routerLink]="['/watch', featuredVideo().id]" class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
+              <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+            </svg>
+            Reproducir
+          </a>
+          <button class="btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="btn-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+            </svg>
+            Mi Lista
+          </button>
+        </div>
+      </div>
+      <div class="hero-visual animate-scale-in delay-200">
+        <div class="hero-thumbnail">
+          <img class="hero-image absolute inset-0 h-full w-full object-cover" [src]="featuredVideo().thumbnail" [alt]="featuredVideo().title" fetchpriority="high"/>
+          <div class="thumbnail-gradient"></div>
+          <div class="play-overlay">
+            <div class="play-button-hero">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+          <div class="hero-duration">{{ featuredVideo().duration }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== CATEGORIES ====== -->
+  <section class="categories-section">
+    <div class="section-container mx-auto w-full max-w-350 px-6">
+      <div class="categories-scroll">
+        @for (cat of categories(); track cat) {
+          <button
+            class="category-pill"
+            [class.active]="activeCategory() === cat"
+            (click)="setCategory(cat)">
+            {{ cat }}
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== RECOMMENDED FOR YOU (AI) ====== -->
+  <section class="content-section">
+    <div class="section-container mx-auto w-full max-w-350 px-6">
+      <div class="section-header">
+        <div class="section-title-group">
+          <h2 class="section-title">Recomendado para ti</h2>
+          <div class="ai-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="ai-icon">
+              <path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5Z" clip-rule="evenodd"/>
+            </svg>
+            Impulsado por IA
+          </div>
+        </div>
+        <p class="section-subtitle">Basado en tu historial de visualización · Filtrado Colaborativo</p>
+        <div class="carousel-controls">
+          <button class="carousel-btn" (click)="scrollCarousel('left', 'recommended')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+            </svg>
+          </button>
+          <button class="carousel-btn" (click)="scrollCarousel('right', 'recommended')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="video-carousel" id="recommended">
+        @for (video of recommendedVideos(); track video.id; let i = $index) {
+          <app-video-card
+            [video]="video"
+            [animationDelay]="i * 100"
+            class="carousel-item">
+          </app-video-card>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== TRENDING ====== -->
+  <section class="content-section section-alt">
+    <div class="section-container mx-auto w-full max-w-350 px-6">
+      <div class="section-header">
+        <div class="section-title-group">
+          <h2 class="section-title">Tendencias</h2>
+          <div class="trend-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="trend-icon">
+              <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431 25.834 25.834 0 0 1 6.58 3.93.75.75 0 0 1-.149 1.21 24.243 24.243 0 0 1-6.58 2.858.75.75 0 0 1-.829-1.078 20.29 20.29 0 0 0 2.025-4.724 20.293 20.293 0 0 0-2.446-2.196.75.75 0 0 1 .431-.57ZM7.56 11.04a.75.75 0 0 1 .457.963 20.293 20.293 0 0 0-1.244 5.44.75.75 0 0 1-1.2.495 24.243 24.243 0 0 1-4.38-5.027.75.75 0 0 1 .604-1.165 25.834 25.834 0 0 1 5.764.294Z" clip-rule="evenodd"/>
+            </svg>
+            Popular
+          </div>
+        </div>
+        <p class="section-subtitle">Lo más visto por la comunidad Kino esta semana</p>
+        <div class="carousel-controls">
+          <button class="carousel-btn" (click)="scrollCarousel('left', 'trending')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+            </svg>
+          </button>
+          <button class="carousel-btn" (click)="scrollCarousel('right', 'trending')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="video-carousel" id="trending">
+        @for (video of trendingVideos(); track video.id; let i = $index) {
+          <app-video-card
+            [video]="video"
+            [animationDelay]="i * 100"
+            class="carousel-item">
+          </app-video-card>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== CTA SECTION ====== -->
+  <section class="cta-section">
+    <div class="section-container mx-auto w-full max-w-350 px-6">
+      <div class="cta-card">
+        <div class="cta-content">
+          <h2 class="cta-title">¿Eres creador?</h2>
+          <p class="cta-description">Sube tu contenido, monetiza tu arte y conecta con una audiencia que valora la creatividad independiente.</p>
+          <a routerLink="/creator-studio" class="btn-primary btn-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
+              <path d="M12 .75a8.25 8.25 0 0 0-4.135 15.39c.686.398 1.115 1.008 1.134 1.623a.75.75 0 0 0 .577.706c.352.083.71.148 1.074.195.323.041.6-.218.6-.544v-4.661a6.714 6.714 0 0 1-.937-.171.75.75 0 1 1 .374-1.453 5.261 5.261 0 0 0 2.626 0 .75.75 0 1 1 .374 1.452 6.712 6.712 0 0 1-.937.172v4.66c0 .327.277.586.6.545.364-.047.722-.112 1.074-.195a.75.75 0 0 0 .577-.706c.02-.615.448-1.225 1.134-1.623A8.25 8.25 0 0 0 12 .75Z"/>
+            </svg>
+            Comenzar a crear
+          </a>
+        </div>
+        <div class="cta-decoration">
+          <div class="cta-circle cta-circle-1"></div>
+          <div class="cta-circle cta-circle-2"></div>
+          <div class="cta-circle cta-circle-3"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="footer">
+    <div class="section-container mx-auto w-full max-w-350 px-6">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <div class="logo-icon-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h8.25a3 3 0 003-3v-9a3 3 0 00-3-3H4.5zM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06z"/>
+              </svg>
+            </div>
+            <span class="footer-logo-text">Kino</span>
+          </div>
+          <p class="footer-tagline">La plataforma boutique para creadores independientes.</p>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-heading">Plataforma</h4>
+          <a href="#" class="footer-link">Explorar</a>
+          <a href="#" class="footer-link">Categorías</a>
+          <a href="#" class="footer-link">Creadores</a>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-heading">Creadores</h4>
+          <a href="#" class="footer-link">Creator Studio</a>
+          <a href="#" class="footer-link">Monetización</a>
+          <a href="#" class="footer-link">Analíticas</a>
+        </div>
+        <div class="footer-links">
+          <h4 class="footer-heading">Soporte</h4>
+          <a href="#" class="footer-link">Centro de ayuda</a>
+          <a href="#" class="footer-link">Contacto</a>
+          <a href="#" class="footer-link">Términos</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copyright">© 2026 Kino. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+</div>

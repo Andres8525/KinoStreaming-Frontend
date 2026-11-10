@@ -1,0 +1,62 @@
+<section class="min-h-[calc(100vh-72px)] bg-slate-50 px-4 py-12 sm:px-6 lg:py-20">
+  <div class="mx-auto max-w-md">
+    <div class="mb-8 text-center">
+      <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-coral-500 text-white shadow-lg shadow-coral-500/20">
+        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5Zm15.44 14.25-2.69-2.69V7.94l2.69-2.69c.94-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.62 2.005-2.56 1.06Z"/>
+        </svg>
+      </div>
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-coral-600">Tu próxima historia empieza aquí</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Crea tu cuenta</h1>
+      <p class="mt-2 text-sm text-slate-600">Únete a la comunidad de cine independiente.</p>
+    </div>
+
+    <form class="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          [formGroup]="form" (ngSubmit)="submit()">
+      @if (errorMessage()) {
+        <div role="alert" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <div>
+        <label for="displayName" class="mb-2 block text-sm font-medium text-slate-700">Nombre</label>
+        <input id="displayName" type="text" autocomplete="name" formControlName="displayName"
+               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-coral-500 focus:ring-4 focus:ring-coral-100"
+               placeholder="Tu nombre">
+        @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+          <p class="mt-1 text-sm text-red-600">El nombre es obligatorio (máximo 120 caracteres).</p>
+        }
+      </div>
+
+      <div>
+        <label for="email" class="mb-2 block text-sm font-medium text-slate-700">Correo electrónico</label>
+        <input id="email" type="email" autocomplete="email" formControlName="email"
+               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-coral-500 focus:ring-4 focus:ring-coral-100"
+               placeholder="tu@correo.com">
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <p class="mt-1 text-sm text-red-600">Introduce un correo electrónico válido.</p>
+        }
+      </div>
+
+      <div>
+        <label for="password" class="mb-2 block text-sm font-medium text-slate-700">Contraseña</label>
+        <input id="password" type="password" autocomplete="new-password" formControlName="password"
+               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-coral-500 focus:ring-4 focus:ring-coral-100"
+               placeholder="Mínimo 8 caracteres">
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <p class="mt-1 text-sm text-red-600">Usa entre 8 y 72 caracteres.</p>
+        }
+      </div>
+
+      <button type="submit" [disabled]="submitting()"
+              class="w-full rounded-xl bg-coral-500 px-4 py-3 font-semibold text-white transition hover:bg-coral-600 disabled:cursor-not-allowed disabled:opacity-60">
+        {{ submitting() ? 'Creando cuenta…' : 'Crear cuenta' }}
+      </button>
+      <p class="text-center text-sm text-slate-600">
+        ¿Ya tienes cuenta?
+        <a routerLink="/login" class="font-semibold text-coral-600 hover:text-coral-700">Inicia sesión</a>
+      </p>
+    </form>
+  </div>
+</section>

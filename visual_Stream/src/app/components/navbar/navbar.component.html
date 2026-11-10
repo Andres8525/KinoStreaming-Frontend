@@ -44,23 +44,13 @@
 
     <!-- User Profile -->
     <div class="user-section">
-      <!-- Notifications -->
-      <button class="icon-btn" aria-label="Notificaciones">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
-        </svg>
-        <span class="notification-badge">3</span>
-      </button>
-
-      <!-- Avatar -->
-      <button class="avatar-btn">
-        <div class="avatar">
-          <span class="avatar-text">EM</span>
-        </div>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="chevron-icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
-        </svg>
-      </button>
+      @if (user$ | async; as user) {
+        <span class="user-email">{{ user.email }}</span>
+        <button type="button" class="auth-action" (click)="logout()">Cerrar sesión</button>
+      } @else {
+        <a routerLink="/login" class="auth-link">Iniciar sesión</a>
+        <a routerLink="/register" class="auth-action">Crear cuenta</a>
+      }
     </div>
 
     <!-- Mobile Menu Toggle -->
@@ -86,6 +76,13 @@
       <a routerLink="/creator-studio" routerLinkActive="active-link" class="mobile-link" (click)="toggleMenu()">
         Creator Studio
       </a>
+      @if (user$ | async; as user) {
+        <span class="mobile-link text-slate-500">{{ user.email }}</span>
+        <button type="button" class="mobile-link text-left" (click)="logout(); toggleMenu()">Cerrar sesión</button>
+      } @else {
+        <a routerLink="/login" class="mobile-link" (click)="toggleMenu()">Iniciar sesión</a>
+        <a routerLink="/register" class="mobile-link" (click)="toggleMenu()">Crear cuenta</a>
+      }
     </div>
   }
 </nav>

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, ParamMap, provideRouter } from '@angular/router';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
@@ -14,8 +14,10 @@ describe('DashboardComponent', () => {
     getTrending: ReturnType<typeof vi.fn>;
     getRecommendations: ReturnType<typeof vi.fn>;
   };
+  let queryParams: Subject<ParamMap>;
 
   beforeEach(async () => {
+    queryParams = new Subject<ParamMap>();
     videoApi = {
       getCatalog: vi.fn(() => of([musicVideo, decomposedAnimationVideo])),
       getTrending: vi.fn(() => of([musicVideo, decomposedAnimationVideo])),
@@ -27,7 +29,7 @@ describe('DashboardComponent', () => {
         provideRouter([]),
         {
           provide: ActivatedRoute,
-          useValue: { queryParamMap: of(convertToParamMap({})) }
+          useValue: { queryParamMap: queryParams.asObservable() }
         },
         {
           provide: VideoApiService,
@@ -70,6 +72,17 @@ describe('DashboardComponent', () => {
     expect(videoApi.getCatalog).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.errors()).toEqual([]);
     expect(fixture.componentInstance.catalog()).toHaveLength(2);
+  });
+
+  it('stops reacting to route search changes after destruction', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    fixture.destroy();
+    queryParams.next(convertToParamMap({ q: 'ignored' }));
+
+    expect(component.searchTerm()).toBe('');
   });
 });
 

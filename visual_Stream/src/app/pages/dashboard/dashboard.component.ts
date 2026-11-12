@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
@@ -16,6 +17,7 @@ import { VideoCardData } from '../../core/videos/video.models';
 export class DashboardComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   private pendingLoads = 0;
 
   readonly categories = signal([
@@ -43,7 +45,9 @@ export class DashboardComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.route.queryParamMap.subscribe(params => this.searchTerm.set(params.get('q')?.trim() ?? ''));
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => this.searchTerm.set(params.get('q')?.trim() ?? ''));
     this.loadContent();
   }
 

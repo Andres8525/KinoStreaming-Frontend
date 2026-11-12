@@ -11,6 +11,6 @@ export const routes: Routes = [
   { path: 'creator-studio', component: CreatorStudioComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'watch/:id', component: VideoPlayerComponent },
+  { path: 'watch/:id', component: VideoPlayerComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '' }
 ];

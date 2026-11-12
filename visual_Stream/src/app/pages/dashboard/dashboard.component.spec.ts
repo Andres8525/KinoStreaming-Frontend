@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
 import { DashboardComponent } from './dashboard.component';
@@ -8,8 +9,18 @@ import { DashboardComponent } from './dashboard.component';
 describe('DashboardComponent', () => {
   const musicVideo = createVideo('music', 'Música en vivo', ['Música']);
   const decomposedAnimationVideo = createVideo('animation', 'Animación', ['Animacio\u0301n']);
+  let videoApi: {
+    getCatalog: ReturnType<typeof vi.fn>;
+    getTrending: ReturnType<typeof vi.fn>;
+    getRecommendations: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
+    videoApi = {
+      getCatalog: vi.fn(() => of([musicVideo, decomposedAnimationVideo])),
+      getTrending: vi.fn(() => of([musicVideo, decomposedAnimationVideo])),
+      getRecommendations: vi.fn(() => of([musicVideo, decomposedAnimationVideo]))
+    };
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
@@ -20,11 +31,7 @@ describe('DashboardComponent', () => {
         },
         {
           provide: VideoApiService,
-          useValue: {
-            getCatalog: () => of([musicVideo, decomposedAnimationVideo]),
-            getTrending: () => of([musicVideo, decomposedAnimationVideo]),
-            getRecommendations: () => of([musicVideo, decomposedAnimationVideo])
-          }
+          useValue: videoApi
         }
       ]
     }).compileComponents();
@@ -46,6 +53,23 @@ describe('DashboardComponent', () => {
     fixture.componentInstance.setCategory('Animación');
 
     expect(fixture.componentInstance.recommendedVideos().map(video => video.id)).toEqual(['animation']);
+  });
+
+  it('retries content requests after a failure', () => {
+    videoApi.getCatalog
+      .mockReturnValueOnce(throwError(() => new Error('offline')))
+      .mockReturnValue(of([musicVideo, decomposedAnimationVideo]));
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.errors()).toHaveLength(1);
+    const retryButton = fixture.nativeElement.querySelector('.dashboard-retry') as HTMLButtonElement;
+    retryButton.click();
+    fixture.detectChanges();
+
+    expect(videoApi.getCatalog).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.errors()).toEqual([]);
+    expect(fixture.componentInstance.catalog()).toHaveLength(2);
   });
 });
 

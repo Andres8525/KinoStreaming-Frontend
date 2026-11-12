@@ -1,6 +1,8 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { catchError, distinctUntilChanged, filter, map, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
@@ -16,6 +18,7 @@ export class VideoPlayerComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly videoApi = inject(VideoApiService);
   private readonly auth = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   readonly video = signal<VideoCardData | null>(null);
@@ -27,11 +30,38 @@ export class VideoPlayerComponent implements OnInit {
   private readonly recordedViews = new Set<string>();
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const videoId = params.get('id');
-      if (videoId) {
-        this.loadVideo(videoId);
+    this.route.paramMap.pipe(
+      map(params => params.get('id')),
+      filter((videoId): videoId is string => videoId !== null),
+      distinctUntilChanged(),
+      tap(() => {
+        this.isLoading.set(true);
+        this.errorMessage.set('');
+        this.playbackMessage.set('');
+        this.video.set(null);
+        this.relatedVideos.set([]);
+      }),
+      switchMap(videoId => this.videoApi.getVideo(videoId).pipe(
+        switchMap(video => this.videoApi.getTrending().pipe(
+          map(videos => ({
+            video,
+            relatedVideos: videos.filter(item => item.id !== video.id).slice(0, 6)
+          })),
+          catchError(() => of({ video, relatedVideos: [] }))
+        )),
+        catchError(() => of(null))
+      )),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(result => {
+      if (!result) {
+        this.errorMessage.set('No se encontró el video o no fue posible conectar con Kino.');
+        this.isLoading.set(false);
+        return;
       }
+
+      this.video.set(result.video);
+      this.relatedVideos.set(result.relatedVideos);
+      this.isLoading.set(false);
     });
   }
 
@@ -73,31 +103,6 @@ export class VideoPlayerComponent implements OnInit {
     this.playbackMessage.set('No se pudo reproducir este archivo. Comprueba que la URL sea pública y compatible con el navegador.');
   }
 
-  private loadVideo(videoId: string): void {
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-    this.playbackMessage.set('');
-    this.video.set(null);
-
-    this.videoApi.getVideo(videoId).subscribe({
-      next: video => {
-        this.video.set(video);
-        this.isLoading.set(false);
-        this.loadRelated(video.id);
-      },
-      error: () => {
-        this.errorMessage.set('No se encontró el video o no fue posible conectar con Kino.');
-        this.isLoading.set(false);
-      }
-    });
-  }
-
-  private loadRelated(currentVideoId: string): void {
-    this.videoApi.getTrending().subscribe({
-      next: videos => this.relatedVideos.set(videos.filter(video => video.id !== currentVideoId).slice(0, 6)),
-      error: () => this.relatedVideos.set([])
-    });
-  }
 }
 
 function formatCount(count: number): string {

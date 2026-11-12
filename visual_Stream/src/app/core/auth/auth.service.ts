@@ -2,9 +2,10 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, tap } from 'rxjs';
+import { API_BASE_URL } from '../api/api.constants';
 import { AuthResponse, LoginRequest, RegisterRequest, UserProfile } from './auth.models';
 
-const API_URL = 'http://localhost:8080/api/auth';
+const API_URL = `${API_BASE_URL}/auth`;
 const TOKEN_KEY = 'kino.accessToken';
 const USER_KEY = 'kino.user';
 

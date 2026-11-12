@@ -1,19 +1,10 @@
-import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
-
-interface Video {
-  id: number;
-  title: string;
-  creator: string;
-  creatorAvatar: string;
-  thumbnail: string;
-  views: string;
-  duration: string;
-  category: string;
-  timeAgo: string;
-}
+import { VideoApiService } from '../../core/videos/video-api.service';
+import { VideoCardData } from '../../core/videos/video.models';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,193 +13,102 @@ interface Video {
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent {
-  categories = signal<string[]>([
-    'Todo', 'Cortometrajes', 'Documentales', 'Animación', 'Música', 'Videoclips', 'Experimental', 'Tutoriales'
+export class DashboardComponent implements OnInit {
+  private readonly videoApi = inject(VideoApiService);
+  private readonly route = inject(ActivatedRoute);
+  private pendingLoads = 0;
+
+  readonly categories = signal([
+    'Todo', 'Cortometrajes', 'Documentales', 'Animación', 'Música',
+    'Videoclips', 'Experimental', 'Tutoriales'
   ]);
+  readonly activeCategory = signal('Todo');
+  readonly recommendations = signal<VideoCardData[]>([]);
+  readonly trending = signal<VideoCardData[]>([]);
+  readonly catalog = signal<VideoCardData[]>([]);
+  readonly searchTerm = signal('');
+  readonly isLoading = signal(true);
+  readonly errors = signal<string[]>([]);
 
-  activeCategory = signal('Todo');
-
-  featuredVideo = signal({
-    id: 1,
-    title: 'El Último Amanecer — Un cortometraje sobre la resiliencia',
-    creator: 'María Solís',
-    description: 'Una historia visual que explora los límites de la esperanza humana a través de paisajes sonoros inmersivos y cinematografía contemplativa.',
-    thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=85',
-    category: 'Cortometraje',
-    views: '24.5K vistas',
-    duration: '18:42'
+  readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
+  readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
+  readonly searchResults = computed(() => {
+    const query = this.searchTerm().toLocaleLowerCase();
+    return this.filterVideos(this.catalog()).filter(video =>
+      `${video.title} ${video.creator} ${video.tags.join(' ')}`.toLocaleLowerCase().includes(query)
+    );
   });
+  readonly featuredVideo = computed(
+    () => this.trendingVideos()[0] ?? this.recommendedVideos()[0] ?? null
+  );
 
-  private readonly allRecommendedVideos = signal<Video[]>([
-    {
-      id: 2,
-      title: 'Raíces Digitales — Documental Interactivo',
-      creator: 'Carlos Vega',
-      creatorAvatar: 'CV',
-      thumbnail: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=800&q=80',
-      views: '18.2K',
-      duration: '32:15',
-      category: 'Documental',
-      timeAgo: 'Hace 2 días'
-    },
-    {
-      id: 3,
-      title: 'Sinfonía Urbana — Visuales Generativos',
-      creator: 'Ana Ruiz',
-      creatorAvatar: 'AR',
-      thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-      views: '12.8K',
-      duration: '8:45',
-      category: 'Experimental',
-      timeAgo: 'Hace 5 días'
-    },
-    {
-      id: 4,
-      title: 'Origami en Movimiento — Animación Stop Motion',
-      creator: 'Diego Torres',
-      creatorAvatar: 'DT',
-      thumbnail: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
-      views: '31.1K',
-      duration: '12:30',
-      category: 'Animación',
-      timeAgo: 'Hace 1 semana'
-    },
-    {
-      id: 5,
-      title: 'Ecos del Pacífico — Documental Ambiental',
-      creator: 'Laura Chen',
-      creatorAvatar: 'LC',
-      thumbnail: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80',
-      views: '9.4K',
-      duration: '45:20',
-      category: 'Documental',
-      timeAgo: 'Hace 3 días'
-    },
-    {
-      id: 6,
-      title: 'Luces de Medianoche — Videoclip Oficial',
-      creator: 'Banda Nómada',
-      creatorAvatar: 'BN',
-      thumbnail: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
-      views: '56.7K',
-      duration: '4:18',
-      category: 'Música',
-      timeAgo: 'Hace 1 día'
-    },
-    {
-      id: 7,
-      title: 'Código Creativo — Tutorial de Arte Generativo',
-      creator: 'Pablo Mendez',
-      creatorAvatar: 'PM',
-      thumbnail: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=800&q=80',
-      views: '7.3K',
-      duration: '22:05',
-      category: 'Tutorial',
-      timeAgo: 'Hace 4 días'
-    },
-    {
-      id: 8,
-      title: 'Susurros del Bosque — Cortometraje Contemplativo',
-      creator: 'Elena Vidal',
-      creatorAvatar: 'EV',
-      thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80',
-      views: '15.9K',
-      duration: '14:55',
-      category: 'Cortometraje',
-      timeAgo: 'Hace 6 días'
-    },
-    {
-      id: 9,
-      title: 'Pixel Dreams — Animación Experimental',
-      creator: 'Marco Reyes',
-      creatorAvatar: 'MR',
-      thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
-      views: '22.4K',
-      duration: '6:38',
-      category: 'Animación',
-      timeAgo: 'Hace 2 semanas'
-    }
-  ]);
-
-  private readonly allTrendingVideos = signal<Video[]>([
-    {
-      id: 10,
-      title: 'La Ruta de las Estrellas — Time-Lapse',
-      creator: 'Sofía Luna',
-      creatorAvatar: 'SL',
-      thumbnail: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=800&q=80',
-      views: '41.2K',
-      duration: '10:15',
-      category: 'Documental',
-      timeAgo: 'Hace 12 horas'
-    },
-    {
-      id: 11,
-      title: 'Danza Mecánica — Performance Visual',
-      creator: 'Ricardo Paz',
-      creatorAvatar: 'RP',
-      thumbnail: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=80',
-      views: '8.6K',
-      duration: '7:22',
-      category: 'Experimental',
-      timeAgo: 'Hace 1 día'
-    },
-    {
-      id: 12,
-      title: 'Acuarelas Vivas — Proceso Artístico',
-      creator: 'Camila Ortiz',
-      creatorAvatar: 'CO',
-      thumbnail: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
-      views: '19.8K',
-      duration: '16:40',
-      category: 'Tutorial',
-      timeAgo: 'Hace 3 días'
-    },
-    {
-      id: 13,
-      title: 'Horizonte Infinito — Drone Cinematografía',
-      creator: 'Andrés Gil',
-      creatorAvatar: 'AG',
-      thumbnail: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80',
-      views: '33.5K',
-      duration: '20:10',
-      category: 'Documental',
-      timeAgo: 'Hace 5 días'
-    }
-  ]);
-
-  recommendedVideos = computed(() => this.filterVideos(this.allRecommendedVideos()));
-  trendingVideos = computed(() => this.filterVideos(this.allTrendingVideos()));
-
-  scrollPosition = signal(0);
-
-  private filterVideos(videos: Video[]): Video[] {
-    const categoryAliases: Record<string, string> = {
-      Cortometrajes: 'Cortometraje',
-      Documentales: 'Documental',
-      Videoclips: 'Videoclip',
-      Tutoriales: 'Tutorial'
-    };
-    const category = categoryAliases[this.activeCategory()] ?? this.activeCategory();
-
-    return category === 'Todo'
-      ? videos
-      : videos.filter(video => video.category === category);
+  ngOnInit(): void {
+    this.route.queryParamMap.subscribe(params => this.searchTerm.set(params.get('q')?.trim() ?? ''));
+    this.load(this.videoApi.getRecommendations(), this.recommendations,
+      'No se pudieron cargar las recomendaciones personalizadas.');
+    this.load(this.videoApi.getTrending(), this.trending,
+      'No se pudo cargar la lista de tendencias.');
+    this.load(this.videoApi.getCatalog(), this.catalog,
+      'No se pudo cargar el catálogo de videos.');
   }
 
-  setCategory(category: string) {
+  setCategory(category: string): void {
     this.activeCategory.set(category);
   }
 
-  scrollCarousel(direction: 'left' | 'right', carouselId: string) {
+  scrollCarousel(direction: 'left' | 'right', carouselId: string): void {
     const container = document.getElementById(carouselId);
     if (container) {
-      const scrollAmount = 320;
       container.scrollBy({
-        left: direction === 'right' ? scrollAmount : -scrollAmount,
+        left: direction === 'right' ? 320 : -320,
         behavior: 'smooth'
       });
     }
+  }
+
+  private load(
+    request: Observable<VideoCardData[]>,
+    target: WritableSignal<VideoCardData[]>,
+    errorMessage: string
+  ): void {
+    this.pendingLoads++;
+    let settled = false;
+    const finish = (): void => {
+      if (!settled) {
+        settled = true;
+        this.pendingLoads--;
+        this.isLoading.set(this.pendingLoads > 0);
+      }
+    };
+
+    request.subscribe({
+      next: videos => target.set(videos),
+      error: () => {
+        this.errors.update(errors => [...errors, errorMessage]);
+        finish();
+      },
+      complete: finish
+    });
+  }
+
+  private filterVideos(videos: VideoCardData[]): VideoCardData[] {
+    const aliases: Record<string, string[]> = {
+      Cortometrajes: ['cortometraje', 'cortometrajes'],
+      Documentales: ['documental', 'documentales'],
+      Animación: ['animación', 'animacion'],
+      Música: ['música', 'musica'],
+      Videoclips: ['videoclip', 'videoclips'],
+      Experimental: ['experimental'],
+      Tutoriales: ['tutorial', 'tutoriales']
+    };
+    const category = this.activeCategory();
+    if (category === 'Todo') {
+      return videos;
+    }
+
+    const acceptedTags = aliases[category] ?? [category.toLowerCase()];
+    return videos.filter(video =>
+      video.tags.some(tag => acceptedTags.includes(tag.toLowerCase()))
+    );
   }
 }

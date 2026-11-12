@@ -654,3 +654,33 @@
     width: 260px;
   }
 }
+
+.dashboard-alert,
+.dashboard-empty,
+.dashboard-state {
+  color: #475569;
+  padding: 18px 24px;
+  text-align: center;
+}
+
+.dashboard-alert {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.dashboard-state {
+  min-height: 220px;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+}
+
+.dashboard-state h1,
+.dashboard-state p {
+  margin: 0;
+}
+
+.search-results {
+  flex-wrap: wrap;
+  overflow: visible;
+}

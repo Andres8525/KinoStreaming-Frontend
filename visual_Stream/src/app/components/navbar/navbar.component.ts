@@ -39,4 +39,9 @@ export class NavbarComponent {
     const input = event.target as HTMLInputElement;
     this.searchQuery.set(input.value);
   }
+
+  submitSearch() {
+    const query = this.searchQuery().trim();
+    void this.router.navigate(['/'], { queryParams: { q: query || null } });
+  }
 }

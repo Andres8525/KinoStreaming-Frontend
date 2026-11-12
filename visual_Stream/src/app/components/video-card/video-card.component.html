@@ -1,7 +1,9 @@
 <a [routerLink]="['/watch', video.id]" class="card" [style.animation-delay.ms]="animationDelay">
   <!-- Thumbnail -->
   <div class="card-thumbnail" [style.background]="gradientStyle">
-    <img class="thumbnail-image absolute inset-0 h-full w-full object-cover" [class.image-failed]="imageFailed" [src]="video.thumbnail" [alt]="video.title" loading="lazy" (error)="imageFailed = true"/>
+    @if (video.thumbnail) {
+      <img class="thumbnail-image absolute inset-0 h-full w-full object-cover" [class.image-failed]="imageFailed" [src]="video.thumbnail" [alt]="video.title" loading="lazy" (error)="imageFailed = true"/>
+    }
     <div class="thumb-pattern"></div>
     <div class="play-overlay">
       <div class="play-btn">
@@ -10,7 +12,9 @@
         </svg>
       </div>
     </div>
-    <div class="duration-badge">{{ video.duration }}</div>
+    @if (video.duration) {
+      <div class="duration-badge">{{ video.duration }}</div>
+    }
   </div>
 
   <!-- Info -->
@@ -28,7 +32,9 @@
       </div>
       <div class="creator-info">
         <span class="creator-name">{{ video.creator }}</span>
-        <span class="time-ago">{{ video.timeAgo }}</span>
+        @if (video.timeAgo) {
+          <span class="time-ago">{{ video.timeAgo }}</span>
+        }
       </div>
     </div>
   </div>

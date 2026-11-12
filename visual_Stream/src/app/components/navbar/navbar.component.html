@@ -36,9 +36,11 @@
         type="text"
         placeholder="Buscar creadores, videos, categorías..."
         class="search-input"
+        [value]="searchQuery()"
         (focus)="onSearchFocus()"
         (blur)="onSearchBlur()"
         (input)="onSearchInput($event)"
+        (keydown.enter)="submitSearch()"
       />
     </div>
 

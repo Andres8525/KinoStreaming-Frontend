@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { VideoCardData } from '../../core/videos/video.models';
 
 @Component({
   selector: 'app-video-card',
@@ -10,7 +11,7 @@ import { RouterLink } from '@angular/router';
   styleUrl: './video-card.component.scss'
 })
 export class VideoCardComponent {
-  @Input() video: any;
+  @Input({ required: true }) video!: VideoCardData;
   @Input() animationDelay: number = 0;
   imageFailed = false;
 
@@ -25,7 +26,8 @@ export class VideoCardComponent {
       'linear-gradient(135deg, #713F12, #A16207)',
       'linear-gradient(135deg, #831843, #BE185D)',
     ];
-    return gradients[(this.video?.id || 0) % gradients.length];
+    const seed = this.video.id.split('').reduce((sum, character) => sum + character.charCodeAt(0), 0);
+    return gradients[seed % gradients.length];
   }
 
   get categoryColor(): string {

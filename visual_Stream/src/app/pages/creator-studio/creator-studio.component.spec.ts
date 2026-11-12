@@ -1,15 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
 import { CreatorStudioComponent } from './creator-studio.component';
 
 describe('CreatorStudioComponent', () => {
   let publishedRequests: CreateVideoRequest[];
+  let publishResponse: Observable<VideoCardData>;
 
   beforeEach(async () => {
     publishedRequests = [];
+    publishResponse = of(createVideo());
     await TestBed.configureTestingModule({
       imports: [CreatorStudioComponent],
       providers: [
@@ -21,7 +23,7 @@ describe('CreatorStudioComponent', () => {
             getCreatorAnalytics: () => of(emptyAnalytics()),
             publishVideo: (request: CreateVideoRequest) => {
               publishedRequests.push(request);
-              return of(createVideo());
+              return publishResponse;
             }
           }
         }
@@ -42,6 +44,25 @@ describe('CreatorStudioComponent', () => {
     component.publishVideo();
 
     expect(publishedRequests[0].tags).toEqual(['Cortometraje', 'Indie']);
+  });
+
+  it('ignores repeated submits while publishing is in progress', () => {
+    const publishing = new Subject<VideoCardData>();
+    publishResponse = publishing;
+    const fixture = TestBed.createComponent(CreatorStudioComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.videoTitle.set('Una historia');
+    component.videoDescription.set('Descripción de la historia.');
+    component.videoUrl.set('https://cdn.example.com/video.mp4');
+    component.selectedCategory.set('Cortometraje');
+
+    component.publishVideo();
+    component.publishVideo();
+
+    expect(publishedRequests).toHaveLength(1);
+    publishing.next(createVideo());
+    publishing.complete();
   });
 });
 

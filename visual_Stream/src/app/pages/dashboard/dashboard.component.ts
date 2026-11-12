@@ -33,9 +33,9 @@ export class DashboardComponent implements OnInit {
   readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
   readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
   readonly searchResults = computed(() => {
-    const query = this.searchTerm().toLocaleLowerCase();
+    const query = normalizeText(this.searchTerm());
     return this.filterVideos(this.catalog()).filter(video =>
-      `${video.title} ${video.creator} ${video.tags.join(' ')}`.toLocaleLowerCase().includes(query)
+      normalizeText(`${video.title} ${video.creator} ${video.tags.join(' ')}`).includes(query)
     );
   });
   readonly featuredVideo = computed(
@@ -108,7 +108,13 @@ export class DashboardComponent implements OnInit {
 
     const acceptedTags = aliases[category] ?? [category.toLowerCase()];
     return videos.filter(video =>
-      video.tags.some(tag => acceptedTags.includes(tag.toLowerCase()))
+      video.tags.some(tag =>
+        acceptedTags.some(acceptedTag => normalizeText(acceptedTag) === normalizeText(tag))
+      )
     );
   }
+}
+
+function normalizeText(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 }

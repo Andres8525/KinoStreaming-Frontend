@@ -668,6 +668,16 @@
   color: #b42318;
 }
 
+.dashboard-retry {
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 14px;
+}
+
 .dashboard-state {
   min-height: 220px;
   display: grid;

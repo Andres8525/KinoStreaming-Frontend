@@ -44,6 +44,17 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => this.searchTerm.set(params.get('q')?.trim() ?? ''));
+    this.loadContent();
+  }
+
+  reload(): void {
+    this.loadContent();
+  }
+
+  private loadContent(): void {
+    this.pendingLoads = 0;
+    this.errors.set([]);
+    this.isLoading.set(true);
     this.load(this.videoApi.getRecommendations(), this.recommendations,
       'No se pudieron cargar las recomendaciones personalizadas.');
     this.load(this.videoApi.getTrending(), this.trending,

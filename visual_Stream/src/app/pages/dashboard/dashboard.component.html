@@ -4,6 +4,9 @@
       @for (message of errors(); track message) {
         <p>{{ message }} Comprueba que el backend esté disponible e inténtalo de nuevo.</p>
       }
+      @if (!isLoading()) {
+        <button type="button" class="dashboard-retry" (click)="reload()">Intentar de nuevo</button>
+      }
     </div>
   }
 

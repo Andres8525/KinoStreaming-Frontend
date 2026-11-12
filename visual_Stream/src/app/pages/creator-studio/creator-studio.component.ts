@@ -86,7 +86,11 @@ export class CreatorStudioComponent implements OnInit {
     const donation = this.suggestedDonation().trim()
       ? Number(this.suggestedDonation())
       : null;
-    const tags = [...new Set([this.selectedCategory(), ...this.tags()])];
+    const tags = [this.selectedCategory(), ...this.tags()]
+      .map(tag => tag.trim())
+      .filter((tag, index, allTags) =>
+        tag && allTags.findIndex(candidate => normalizeTag(candidate) === normalizeTag(tag)) === index
+      );
 
     if (!title || !description || !this.selectedCategory() || !isHttpUrl(videoUrl)) {
       this.formError.set('Completa título, descripción, categoría y una URL de video HTTP o HTTPS válida.');
@@ -181,4 +185,8 @@ function apiErrorMessage(error: unknown, fallback: string): string {
     return error.error.message;
   }
   return fallback;
+}
+
+function normalizeTag(tag: string): string {
+  return tag.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 }

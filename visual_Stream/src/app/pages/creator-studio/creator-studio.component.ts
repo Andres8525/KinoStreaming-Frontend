@@ -76,6 +76,10 @@ export class CreatorStudioComponent implements OnInit {
   }
 
   publishVideo(): void {
+    if (this.isPublishing()) {
+      return;
+    }
+
     this.formError.set('');
     this.formMessage.set('');
     const title = this.videoTitle().trim();

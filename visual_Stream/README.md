@@ -2,6 +2,14 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.9.
 
+## Kino streaming features
+
+The Angular app calls the Kino backend at `http://localhost:8080/api`. The authenticated dashboard loads the public catalog and trending list, plus personalized recommendations from `/api/feed/recommendations`. Creator Studio publishes video metadata to `/api/creator/videos` and reads the creator analytics endpoint.
+
+Videos stream directly from their `videoUrl`; provide a publicly reachable URL in a browser-supported format (for example, MP4). Binary uploads, payments, and a trained/external AI model are not configured. Recommendations use the backend's local collaborative-plus-popularity ranker.
+
+For creator features, sign in with an account whose backend role is `CREATOR`. See the backend README for API, database, and migration details.
+
 ## Development server
 
 To start a local development server, run:

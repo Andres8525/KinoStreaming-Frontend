@@ -1,132 +1,184 @@
-import { Component, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { VideoApiService } from '../../core/videos/video-api.service';
+import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
 
 @Component({
   selector: 'app-creator-studio',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './creator-studio.component.html',
   styleUrl: './creator-studio.component.scss'
 })
-export class CreatorStudioComponent {
-  activeTab = signal<'upload' | 'monetization' | 'analytics'>('upload');
+export class CreatorStudioComponent implements OnInit {
+  private readonly videoApi = inject(VideoApiService);
 
-  // Upload form
-  videoTitle = signal('');
-  videoDescription = signal('');
-  selectedCategory = signal('');
-  tags = signal<string[]>(['Cortometraje', 'Indie']);
-  newTag = signal('');
-  isDragging = signal(false);
-  uploadProgress = signal(0);
-  isUploading = signal(false);
-  selectedFile = signal<File | null>(null);
-  fileError = signal('');
-  publishMessage = signal('');
-
-  categories = [
-    'Cortometrajes', 'Documentales', 'Animación', 'Música',
-    'Videoclips', 'Experimental', 'Tutoriales', 'Otro'
-  ];
-
-  // Monetization
-  accessPrice = signal('4.99');
-  donationsEnabled = signal(true);
-  minDonation = signal('1.00');
-
-  // Analytics mock
-  analytics = signal({
-    totalViews: '12,847',
-    subscribers: '1,234',
-    revenue: '$2,156',
-    engagement: '78%'
+  readonly activeTab = signal<'upload' | 'monetization' | 'analytics'>('upload');
+  readonly videoTitle = signal('');
+  readonly videoDescription = signal('');
+  readonly videoUrl = signal('');
+  readonly thumbnailUrl = signal('');
+  readonly selectedCategory = signal('');
+  readonly tags = signal<string[]>(['Indie']);
+  readonly newTag = signal('');
+  readonly accessPrice = signal('0');
+  readonly suggestedDonation = signal('');
+  readonly isPublishing = signal(false);
+  readonly isLoading = signal(true);
+  readonly formError = signal('');
+  readonly formMessage = signal('');
+  readonly pageError = signal('');
+  readonly videos = signal<VideoCardData[]>([]);
+  readonly analytics = signal<CreatorAnalyticsResponse>({
+    videoCount: 0,
+    totalViews: 0,
+    topVideos: []
   });
 
-  setTab(tab: 'upload' | 'monetization' | 'analytics') {
+  readonly categories = [
+    'Cortometraje', 'Documental', 'Animación', 'Música',
+    'Videoclip', 'Experimental', 'Tutorial', 'Otro'
+  ];
+
+  ngOnInit(): void {
+    this.loadVideos();
+    this.loadAnalytics();
+  }
+
+  setTab(tab: 'upload' | 'monetization' | 'analytics'): void {
     this.activeTab.set(tab);
   }
 
-  addTag() {
+  addTag(): void {
     const tag = this.newTag().trim();
-    if (tag && !this.tags().includes(tag)) {
+    if (tag && !this.tags().some(existing => existing.toLowerCase() === tag.toLowerCase())) {
       this.tags.update(tags => [...tags, tag]);
       this.newTag.set('');
     }
   }
 
-  removeTag(tag: string) {
-    this.tags.update(tags => tags.filter(t => t !== tag));
+  removeTag(tag: string): void {
+    this.tags.update(tags => tags.filter(existing => existing !== tag));
   }
 
-  onTagKeydown(event: KeyboardEvent) {
+  onTagKeydown(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       event.preventDefault();
       this.addTag();
     }
   }
 
-  onDragOver(event: DragEvent) {
-    event.preventDefault();
-    this.isDragging.set(true);
+  readText(event: Event): string {
+    return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
   }
 
-  onDragLeave() {
-    this.isDragging.set(false);
-  }
+  publishVideo(): void {
+    this.formError.set('');
+    this.formMessage.set('');
+    const title = this.videoTitle().trim();
+    const description = this.videoDescription().trim();
+    const videoUrl = this.videoUrl().trim();
+    const thumbnailUrl = this.thumbnailUrl().trim();
+    const price = Number(this.accessPrice());
+    const donation = this.suggestedDonation().trim()
+      ? Number(this.suggestedDonation())
+      : null;
+    const tags = [...new Set([this.selectedCategory(), ...this.tags()])];
 
-  onDrop(event: DragEvent) {
-    event.preventDefault();
-    this.isDragging.set(false);
-    const file = event.dataTransfer?.files[0];
-    if (file) this.prepareFile(file);
-  }
-
-  selectFile(input: HTMLInputElement) {
-    input.click();
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.prepareFile(file);
-    input.value = '';
-  }
-
-  prepareFile(file: File) {
-    const allowedVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
-    if (!allowedVideo) {
-      this.fileError.set('Selecciona un archivo de video compatible.');
+    if (!title || !description || !this.selectedCategory() || !isHttpUrl(videoUrl)) {
+      this.formError.set('Completa título, descripción, categoría y una URL de video HTTP o HTTPS válida.');
       return;
     }
-    if (file.size > 4 * 1024 ** 3) {
-      this.fileError.set('El video supera el límite de 4 GB.');
+    if (tags.length > 20 || tags.some(tag => tag.length > 40)) {
+      this.formError.set('Usa como máximo 20 etiquetas de hasta 40 caracteres cada una.');
+      return;
+    }
+    if (thumbnailUrl && !isHttpUrl(thumbnailUrl)) {
+      this.formError.set('La miniatura debe tener una URL HTTP o HTTPS válida.');
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0 || (donation !== null && (!Number.isFinite(donation) || donation < 0))) {
+      this.formError.set('Los precios deben ser números iguales o mayores que cero.');
       return;
     }
 
-    this.fileError.set('');
-    this.publishMessage.set('');
-    this.selectedFile.set(file);
-    this.isUploading.set(true);
-    this.uploadProgress.set(0);
-    const interval = setInterval(() => {
-      this.uploadProgress.update(p => {
-        if (p >= 100) {
-          clearInterval(interval);
-          this.isUploading.set(false);
-          return 100;
-        }
-        return p + 2;
-      });
-    }, 80);
+    const request: CreateVideoRequest = {
+      title,
+      description,
+      videoUrl,
+      thumbnailUrl: thumbnailUrl || undefined,
+      tags,
+      accessPrice: price,
+      suggestedDonation: donation
+    };
+
+    this.isPublishing.set(true);
+    this.videoApi.publishVideo(request).subscribe({
+      next: video => {
+        this.formMessage.set(`“${video.title}” se publicó correctamente.`);
+        this.videoTitle.set('');
+        this.videoDescription.set('');
+        this.videoUrl.set('');
+        this.thumbnailUrl.set('');
+        this.selectedCategory.set('');
+        this.accessPrice.set('0');
+        this.suggestedDonation.set('');
+        this.isPublishing.set(false);
+        this.loadVideos();
+        this.loadAnalytics();
+      },
+      error: (error: unknown) => {
+        this.formError.set(apiErrorMessage(
+          error,
+          'No se pudo publicar el video. Revisa tu conexión y tus permisos de creador.'
+        ));
+        this.isPublishing.set(false);
+      }
+    });
   }
 
-  publishVideo() {
-    if (!this.selectedFile() || !this.videoTitle().trim()) return;
-    this.publishMessage.set('El video y sus detalles están listos para enviarse.');
+  private loadVideos(): void {
+    this.videoApi.getCreatorVideos().subscribe({
+      next: videos => {
+        this.videos.set(videos);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.pageError.set('No se pudieron cargar tus videos. Comprueba que tu cuenta tenga rol de creador.');
+        this.isLoading.set(false);
+      }
+    });
   }
 
-  toggleDonations() {
-    this.donationsEnabled.update(v => !v);
+  private loadAnalytics(): void {
+    this.videoApi.getCreatorAnalytics().subscribe({
+      next: analytics => this.analytics.set(analytics),
+      error: () => this.pageError.set('No se pudieron cargar las analíticas del canal.')
+    });
   }
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function apiErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error instanceof HttpErrorResponse &&
+    typeof error.error === 'object' &&
+    error.error !== null &&
+    'message' in error.error &&
+    typeof error.error.message === 'string'
+  ) {
+    return error.error.message;
+  }
+  return fallback;
 }

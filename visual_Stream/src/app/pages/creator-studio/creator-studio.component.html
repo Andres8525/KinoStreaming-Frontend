@@ -1,343 +1,196 @@
-<div class="studio">
-  <!-- Header -->
-  <div class="studio-header">
+<main class="studio">
+  <header class="studio-header">
     <div class="studio-container mx-auto w-full max-w-300 px-6">
       <div class="header-content">
         <div>
-          <h1 class="studio-title animate-fade-in">Creator Studio</h1>
-          <p class="studio-subtitle animate-fade-in delay-100">Gestiona tu contenido, monetización y analíticas</p>
+          <h1 class="studio-title">Creator Studio</h1>
+          <p class="studio-subtitle">Publica tus videos y consulta el rendimiento real de tu canal.</p>
         </div>
-        <div class="header-stats animate-fade-in delay-200">
+        <div class="header-stats">
           <div class="stat-mini">
-            <span class="stat-mini-value">{{ analytics().totalViews }}</span>
-            <span class="stat-mini-label">Vistas</span>
+            <span class="stat-mini-value">{{ analytics().totalViews | number }}</span>
+            <span class="stat-mini-label">Reproducciones</span>
           </div>
           <div class="stat-mini">
-            <span class="stat-mini-value">{{ analytics().subscribers }}</span>
-            <span class="stat-mini-label">Suscriptores</span>
+            <span class="stat-mini-value">{{ analytics().videoCount }}</span>
+            <span class="stat-mini-label">Videos</span>
           </div>
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs animate-slide-up delay-200">
-        <button class="tab" [class.active]="activeTab() === 'upload'" (click)="setTab('upload')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
-          </svg>
-          Subir Video
+      <nav class="tabs" aria-label="Secciones de Creator Studio">
+        <button type="button" class="tab" [class.active]="activeTab() === 'upload'" (click)="setTab('upload')">
+          Publicar video
         </button>
-        <button class="tab" [class.active]="activeTab() === 'monetization'" (click)="setTab('monetization')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-          </svg>
-          Monetización
+        <button type="button" class="tab" [class.active]="activeTab() === 'monetization'" (click)="setTab('monetization')">
+          Precios
         </button>
-        <button class="tab" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="tab-icon">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
-          </svg>
+        <button type="button" class="tab" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">
           Analíticas
         </button>
-      </div>
+      </nav>
     </div>
-  </div>
+  </header>
 
-  <!-- Content -->
-  <div class="studio-content">
+  <section class="studio-content">
     <div class="studio-container mx-auto w-full max-w-300 px-6">
+      @if (pageError()) {
+        <p class="studio-message error" role="alert">{{ pageError() }}</p>
+      }
 
-      <!-- ===== UPLOAD TAB ===== -->
       @if (activeTab() === 'upload') {
-        <div class="tab-content animate-fade-in">
+        <div class="tab-content">
           <div class="upload-grid">
-            <!-- Drop Zone -->
-            <div class="upload-section">
-              <input #videoFileInput class="sr-only" type="file" accept="video/*" (change)="onFileSelected($event)"/>
-              <div
-                class="dropzone"
-                [class.dragging]="isDragging()"
-                [class.uploading]="isUploading()"
-                role="button"
-                tabindex="0"
-                (dragover)="onDragOver($event)"
-                (dragleave)="onDragLeave()"
-                (drop)="onDrop($event)"
-                (click)="selectFile(videoFileInput)"
-                (keydown.enter)="selectFile(videoFileInput)"
-                (keydown.space)="$event.preventDefault(); selectFile(videoFileInput)">
-
-                @if (!isUploading()) {
-                  @if (selectedFile(); as file) {
-                    <div class="dropzone-content">
-                      <div class="dropzone-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-                        </svg>
-                      </div>
-                      <p class="dropzone-text">{{ file.name }}</p>
-                      <p class="dropzone-hint">Archivo listo para publicar · {{ (file.size / 1048576) | number:'1.0-1' }} MB</p>
-                    </div>
-                  } @else {
-                    <div class="dropzone-content">
-                      <div class="dropzone-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/>
-                        </svg>
-                      </div>
-                      <p class="dropzone-text">Arrastra tu video aquí o <span class="dropzone-link">selecciona un archivo</span></p>
-                      <p class="dropzone-hint">MP4, MOV, AVI o WebM · Máximo 4 GB</p>
-                    </div>
-                  }
-                } @else {
-                  <div class="upload-progress-content">
-                    <div class="progress-circle">
-                      <svg viewBox="0 0 100 100">
-                        <circle class="progress-bg" cx="50" cy="50" r="42"/>
-                        <circle class="progress-bar" cx="50" cy="50" r="42"
-                          [style.stroke-dasharray]="264"
-                          [style.stroke-dashoffset]="264 - (264 * uploadProgress()) / 100"/>
-                      </svg>
-                      <span class="progress-text">{{ uploadProgress() }}%</span>
-                    </div>
-                    <p class="upload-status">
-                      {{ uploadProgress() < 100 ? 'Subiendo video...' : '¡Video subido exitosamente!' }}
-                    </p>
-                  </div>
-                }
-              </div>
-              @if (fileError()) {
-                <p class="upload-error" role="alert">{{ fileError() }}</p>
-              }
-            </div>
-
-            <!-- Form -->
-            <div class="form-section">
-              <div class="form-group">
-                <label class="form-label">Título del Video</label>
-                <input
-                  type="text"
-                  class="form-input"
-                  placeholder="Escribe un título descriptivo..."
-                  [value]="videoTitle()"
-                  (input)="videoTitle.set($any($event.target).value)"/>
-              </div>
+            <form class="form-section" (ngSubmit)="publishVideo()">
+              <h2 class="card-section-title">Detalles de publicación</h2>
+              <p class="card-section-desc">Kino transmite desde una URL de video accesible por HTTPS o HTTP.</p>
 
               <div class="form-group">
-                <label class="form-label">Descripción</label>
-                <textarea
-                  class="form-textarea"
-                  rows="4"
-                  placeholder="Describe tu contenido..."
-                  [value]="videoDescription()"
-                  (input)="videoDescription.set($any($event.target).value)">
-                </textarea>
+                <label class="form-label" for="video-title">Título</label>
+                <input id="video-title" class="form-input" type="text" maxlength="180" required
+                  [value]="videoTitle()" (input)="videoTitle.set(readText($event))"/>
               </div>
-
               <div class="form-group">
-                <label class="form-label">Categoría</label>
-                <select class="form-select" [value]="selectedCategory()" (change)="selectedCategory.set($any($event.target).value)">
+                <label class="form-label" for="video-description">Descripción</label>
+                <textarea id="video-description" class="form-textarea" rows="4" maxlength="5000" required
+                  [value]="videoDescription()" (input)="videoDescription.set(readText($event))"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="video-url">URL del video</label>
+                <input id="video-url" class="form-input" type="url" placeholder="https://cdn.example.com/video.mp4"
+                  autocomplete="url" required [value]="videoUrl()" (input)="videoUrl.set(readText($event))"/>
+                <p class="field-hint">Usa un enlace público directo a un archivo compatible con el navegador.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="thumbnail-url">URL de miniatura (opcional)</label>
+                <input id="thumbnail-url" class="form-input" type="url" placeholder="https://cdn.example.com/cover.jpg"
+                  [value]="thumbnailUrl()" (input)="thumbnailUrl.set(readText($event))"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="video-category">Categoría</label>
+                <select id="video-category" class="form-select" required [value]="selectedCategory()"
+                  (change)="selectedCategory.set(readText($event))">
                   <option value="">Selecciona una categoría</option>
-                  @for (cat of categories; track cat) {
-                    <option [value]="cat">{{ cat }}</option>
+                  @for (category of categories; track category) {
+                    <option [value]="category">{{ category }}</option>
                   }
                 </select>
               </div>
-
               <div class="form-group">
-                <label class="form-label">Etiquetas</label>
+                <label class="form-label" for="video-tags">Etiquetas</label>
                 <div class="tags-container">
                   @for (tag of tags(); track tag) {
                     <span class="tag">
                       {{ tag }}
-                      <button class="tag-remove" (click)="removeTag(tag)">×</button>
+                      <button type="button" class="tag-remove" [attr.aria-label]="'Quitar etiqueta ' + tag"
+                        (click)="removeTag(tag)">×</button>
                     </span>
                   }
-                  <input
-                    type="text"
-                    class="tag-input"
-                    placeholder="Agregar etiqueta..."
-                    [value]="newTag()"
-                    (input)="newTag.set($any($event.target).value)"
+                  <input id="video-tags" type="text" class="tag-input" placeholder="Agregar etiqueta…"
+                    maxlength="40" [value]="newTag()" (input)="newTag.set(readText($event))"
                     (keydown)="onTagKeydown($event)"/>
                 </div>
               </div>
+              <div class="form-price-grid">
+                <div class="form-group">
+                  <label class="form-label" for="access-price">Precio de acceso (USD)</label>
+                  <input id="access-price" class="form-input" type="number" min="0" step="0.01"
+                    [value]="accessPrice()" (input)="accessPrice.set(readText($event))"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="suggested-donation">Donación sugerida (USD)</label>
+                  <input id="suggested-donation" class="form-input" type="number" min="0" step="0.01"
+                    [value]="suggestedDonation()" (input)="suggestedDonation.set(readText($event))"/>
+                </div>
+              </div>
+              <p class="field-hint">Los precios se guardan en la publicación. El procesamiento de pagos aún no está habilitado.</p>
 
-              <button class="btn-publish" [disabled]="!selectedFile() || !videoTitle().trim()" (click)="publishVideo()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="btn-icon">
-                  <path fill-rule="evenodd" d="M9.315 7.584C12.195 3.883 16.695 1.5 21.75 1.5a.75.75 0 0 1 .75.75c0 5.056-2.383 9.555-6.084 12.436A6.75 6.75 0 0 1 9.75 22.5a.75.75 0 0 1-.75-.75v-4.131A15.838 15.838 0 0 1 6.382 15H2.25a.75.75 0 0 1-.75-.75 6.75 6.75 0 0 1 7.815-6.666ZM15 6.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" clip-rule="evenodd"/>
-                </svg>
-                Publicar Video
+              @if (formError()) {
+                <p class="studio-message error" role="alert">{{ formError() }}</p>
+              }
+              @if (formMessage()) {
+                <p class="studio-message success" role="status">{{ formMessage() }}</p>
+              }
+              <button type="submit" class="btn-publish" [disabled]="isPublishing()">
+                {{ isPublishing() ? 'Publicando…' : 'Publicar video' }}
               </button>
-              @if (publishMessage()) {
-                <p class="publish-message" role="status">{{ publishMessage() }}</p>
-              }
-            </div>
+            </form>
+
+            <aside class="upload-help">
+              <h2 class="card-section-title">Tu canal</h2>
+              <p class="card-section-desc">Los videos publicados se reproducen desde su URL de origen. Asegúrate de contar con permiso para distribuirlos.</p>
+              <div class="creator-summary">
+                <span class="summary-value">{{ analytics().totalViews | number }}</span>
+                <span class="summary-label">reproducciones acumuladas</span>
+              </div>
+              <div class="creator-summary">
+                <span class="summary-value">{{ analytics().videoCount }}</span>
+                <span class="summary-label">videos publicados</span>
+              </div>
+            </aside>
           </div>
+
+          <section class="creator-videos">
+            <h2 class="section-title">Tus videos</h2>
+            @if (isLoading()) {
+              <p aria-live="polite">Cargando tus publicaciones…</p>
+            } @else {
+              @for (video of videos(); track video.id) {
+                <a class="creator-video-row" [routerLink]="['/watch', video.id]">
+                  <span class="creator-video-title">{{ video.title }}</span>
+                  <span>{{ video.views }} vistas</span>
+                  <span>{{ video.accessPrice | currency:'USD' }}</span>
+                </a>
+              } @empty {
+                <p>Aún no has publicado videos.</p>
+              }
+            }
+          </section>
         </div>
       }
 
-      <!-- ===== MONETIZATION TAB ===== -->
       @if (activeTab() === 'monetization') {
-        <div class="tab-content animate-fade-in">
-          <div class="monetization-grid">
-            <!-- Pricing Card -->
-            <div class="monetization-card">
-              <div class="card-header-section">
-                <div class="card-icon-wrapper pricing-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"/>
-                  </svg>
-                </div>
-                <h3 class="card-section-title">Acceso de Pago</h3>
-                <p class="card-section-desc">Configura un precio para acceder a tu contenido exclusivo</p>
-              </div>
-              <div class="price-input-group">
-                <span class="price-currency">$</span>
-                <input
-                  type="number"
-                  class="price-input"
-                  [value]="accessPrice()"
-                  (input)="accessPrice.set($any($event.target).value)"
-                  step="0.50"
-                  min="0"/>
-                <span class="price-label">USD</span>
-              </div>
-              <div class="price-tiers">
-                <button class="tier-btn" (click)="accessPrice.set('2.99')">$2.99</button>
-                <button class="tier-btn" (click)="accessPrice.set('4.99')">$4.99</button>
-                <button class="tier-btn" (click)="accessPrice.set('9.99')">$9.99</button>
-                <button class="tier-btn" (click)="accessPrice.set('14.99')">$14.99</button>
-              </div>
+        <section class="tab-content monetization-card">
+          <h2 class="card-section-title">Precios por video</h2>
+          <p class="card-section-desc">El precio de acceso y la donación sugerida se configuran al publicar cada video.</p>
+          <p class="studio-message notice">Kino todavía no procesa pagos. No se realizará ningún cobro ni se mostrará contenido como comprado.</p>
+          @for (video of videos(); track video.id) {
+            <div class="creator-video-row">
+              <span class="creator-video-title">{{ video.title }}</span>
+              <span>Acceso: {{ video.accessPrice | currency:'USD' }}</span>
+              <span>Donación sugerida: {{ (video.suggestedDonation ?? 0) | currency:'USD' }}</span>
             </div>
-
-            <!-- Donations Card -->
-            <div class="monetization-card">
-              <div class="card-header-section">
-                <div class="card-icon-wrapper donation-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z"/>
-                  </svg>
-                </div>
-                <h3 class="card-section-title">Propinas y Donaciones</h3>
-                <p class="card-section-desc">Permite que tu audiencia te apoye directamente</p>
-              </div>
-              <div class="toggle-row">
-                <span class="toggle-label">Activar donaciones</span>
-                <button class="toggle" [class.active]="donationsEnabled()" role="switch" [attr.aria-checked]="donationsEnabled()" (click)="toggleDonations()">
-                  <span class="toggle-knob"></span>
-                </button>
-              </div>
-              @if (donationsEnabled()) {
-                <div class="donation-config">
-                  <label class="form-label">Donación mínima</label>
-                  <div class="price-input-group compact">
-                    <span class="price-currency">$</span>
-                    <input
-                      type="number"
-                      class="price-input"
-                      [value]="minDonation()"
-                      (input)="minDonation.set($any($event.target).value)"
-                      step="0.50"
-                      min="0"/>
-                    <span class="price-label">USD</span>
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- Revenue Card -->
-            <div class="monetization-card revenue-card">
-              <div class="card-header-section">
-                <div class="card-icon-wrapper revenue-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd"/>
-                  </svg>
-                </div>
-                <h3 class="card-section-title">Resumen de Ingresos</h3>
-                <p class="card-section-desc">Tu rendimiento del último mes</p>
-              </div>
-              <div class="revenue-stats">
-                <div class="revenue-stat">
-                  <span class="revenue-value">{{ analytics().revenue }}</span>
-                  <span class="revenue-label">Ingresos Totales</span>
-                </div>
-                <div class="revenue-stat">
-                  <span class="revenue-value">{{ analytics().engagement }}</span>
-                  <span class="revenue-label">Engagement</span>
-                </div>
-              </div>
-              <div class="revenue-bar-container">
-                <div class="revenue-bar-label">
-                  <span>Meta mensual</span>
-                  <span>72%</span>
-                </div>
-                <div class="revenue-bar-track">
-                  <div class="revenue-bar-fill" style="width: 72%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          } @empty {
+            <p>Publica un video para configurar sus datos de precio.</p>
+          }
+        </section>
       }
 
-      <!-- ===== ANALYTICS TAB ===== -->
       @if (activeTab() === 'analytics') {
-        <div class="tab-content animate-fade-in">
+        <section class="tab-content">
           <div class="analytics-grid">
-            <div class="analytics-card">
-              <div class="analytics-icon views-icon-bg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                </svg>
-              </div>
-              <div class="analytics-data">
-                <span class="analytics-value">{{ analytics().totalViews }}</span>
-                <span class="analytics-label">Vistas Totales</span>
-              </div>
-              <span class="analytics-trend positive">+12.5%</span>
-            </div>
-            <div class="analytics-card">
-              <div class="analytics-icon subs-icon-bg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
-                </svg>
-              </div>
-              <div class="analytics-data">
-                <span class="analytics-value">{{ analytics().subscribers }}</span>
-                <span class="analytics-label">Suscriptores</span>
-              </div>
-              <span class="analytics-trend positive">+8.3%</span>
-            </div>
-            <div class="analytics-card">
-              <div class="analytics-icon revenue-icon-bg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                </svg>
-              </div>
-              <div class="analytics-data">
-                <span class="analytics-value">{{ analytics().revenue }}</span>
-                <span class="analytics-label">Ingresos</span>
-              </div>
-              <span class="analytics-trend positive">+23.1%</span>
-            </div>
-            <div class="analytics-card">
-              <div class="analytics-icon engage-icon-bg">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5"/>
-                </svg>
-              </div>
-              <div class="analytics-data">
-                <span class="analytics-value">{{ analytics().engagement }}</span>
-                <span class="analytics-label">Engagement</span>
-              </div>
-              <span class="analytics-trend positive">+5.7%</span>
-            </div>
+            <article class="analytics-card">
+              <span class="analytics-value">{{ analytics().totalViews | number }}</span>
+              <span class="analytics-label">Reproducciones registradas</span>
+            </article>
+            <article class="analytics-card">
+              <span class="analytics-value">{{ analytics().videoCount }}</span>
+              <span class="analytics-label">Videos publicados</span>
+            </article>
           </div>
-        </div>
+          <section class="creator-videos">
+            <h2 class="section-title">Videos con más reproducciones</h2>
+            @for (video of analytics().topVideos; track video.id) {
+              <a class="creator-video-row" [routerLink]="['/watch', video.id]">
+                <span class="creator-video-title">{{ video.title }}</span>
+                <span>{{ video.viewCount | number }} vistas</span>
+              </a>
+            } @empty {
+              <p>Las analíticas aparecerán cuando publiques videos y la comunidad los reproduzca.</p>
+            }
+          </section>
+        </section>
       }
-
     </div>
-  </div>
-</div>
+  </section>
+</main>

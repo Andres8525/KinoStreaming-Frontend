@@ -63,4 +63,15 @@ describe('VideoApiService', () => {
 
     expect(result).toEqual({ viewCount: 2 });
   });
+
+  it('deletes a creator video by id', () => {
+    let completed = false;
+    service.deleteVideo('a b').subscribe({ complete: () => completed = true });
+
+    const request = httpTesting.expectOne(`${API_BASE_URL}/creator/videos/a%20b`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(completed).toBe(true);
+  });
 });

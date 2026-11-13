@@ -132,15 +132,27 @@
 
           <section class="creator-videos">
             <h2 class="section-title">Tus videos</h2>
+            @if (listMessage()) {
+              <p class="studio-message success" role="status">{{ listMessage() }}</p>
+            }
+            @if (listError()) {
+              <p class="studio-message error" role="alert">{{ listError() }}</p>
+            }
             @if (isLoading()) {
               <p aria-live="polite">Cargando tus publicaciones…</p>
             } @else {
               @for (video of videos(); track video.id) {
-                <a class="creator-video-row" [routerLink]="['/watch', video.id]">
-                  <span class="creator-video-title">{{ video.title }}</span>
+                <div class="creator-video-row creator-video-row--actions">
+                  <a class="creator-video-title" [routerLink]="['/watch', video.id]">{{ video.title }}</a>
                   <span>{{ video.views }} vistas</span>
                   <span>{{ video.accessPrice | currency:'USD' }}</span>
-                </a>
+                  <button type="button" class="video-delete-btn"
+                          [disabled]="deletingVideoId() !== null"
+                          [attr.aria-label]="'Eliminar ' + video.title"
+                          (click)="deleteVideo(video)">
+                    {{ deletingVideoId() === video.id ? 'Eliminando…' : 'Eliminar' }}
+                  </button>
+                </div>
               } @empty {
                 <p>Aún no has publicado videos.</p>
               }

@@ -50,6 +50,10 @@ export class VideoApiService {
     return this.http.get<CreatorAnalyticsResponse>(`${API_BASE_URL}/creator/videos/analytics`);
   }
 
+  deleteVideo(videoId: string): Observable<void> {
+    return this.http.delete<void>(`${API_BASE_URL}/creator/videos/${encodeURIComponent(videoId)}`);
+  }
+
   publishVideo(request: CreateVideoRequest): Observable<VideoCardData> {
     return this.http.post<VideoResponse>(`${API_BASE_URL}/creator/videos`, request)
       .pipe(map(toVideoCardData));

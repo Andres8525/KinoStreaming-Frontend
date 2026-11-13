@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ServerStatusService } from '../../core/api/server-status.service';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -17,6 +18,8 @@ export class LoginComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly submitting = signal(false);
+  /** Lets the form explain a slow first request while a sleeping backend starts. */
+  readonly serverState = inject(ServerStatusService).state;
   readonly errorMessage = signal('');
   readonly sessionExpired = this.route.snapshot.queryParamMap.has('expired');
   readonly form = this.formBuilder.nonNullable.group({

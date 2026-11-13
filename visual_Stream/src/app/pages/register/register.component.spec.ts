@@ -2,8 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { signal } from '@angular/core';
+import { ServerState, ServerStatusService } from '../../core/api/server-status.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { RegisterComponent } from './register.component';
+
+const serverState = signal<ServerState>('online');
 
 describe('RegisterComponent', () => {
   let register: ReturnType<typeof vi.fn>;
@@ -12,7 +16,8 @@ describe('RegisterComponent', () => {
     register = vi.fn();
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
-      providers: [provideRouter([]), { provide: AuthService, useValue: { register } }]
+      providers: [provideRouter([]), { provide: ServerStatusService, useValue: { state: serverState } },
+        { provide: AuthService, useValue: { register } }]
     }).compileComponents();
   });
 

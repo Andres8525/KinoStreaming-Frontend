@@ -2,8 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { signal } from '@angular/core';
+import { ServerState, ServerStatusService } from '../../core/api/server-status.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { LoginComponent } from './login.component';
+
+const serverState = signal<ServerState>('online');
 
 describe('LoginComponent', () => {
   let login: ReturnType<typeof vi.fn>;
@@ -14,6 +18,7 @@ describe('LoginComponent', () => {
       imports: [LoginComponent],
       providers: [
         provideRouter([]),
+        { provide: ServerStatusService, useValue: { state: serverState } },
         { provide: AuthService, useValue: { login } },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } }
       ]

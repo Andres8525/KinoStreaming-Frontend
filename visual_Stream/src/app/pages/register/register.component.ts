@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { ServerStatusService } from '../../core/api/server-status.service';
 import { apiErrorMessage, apiValidationErrors } from '../../core/api/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -16,6 +17,8 @@ export class RegisterComponent {
   private readonly router = inject(Router);
 
   readonly submitting = signal(false);
+  /** Lets the form explain a slow first request while a sleeping backend starts. */
+  readonly serverState = inject(ServerStatusService).state;
   readonly errorMessage = signal('');
   /** Field errors returned by the backend (400), keyed by form control name. */
   readonly serverErrors = signal<Record<string, string>>({});

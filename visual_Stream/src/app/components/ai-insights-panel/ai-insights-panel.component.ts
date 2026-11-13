@@ -15,7 +15,8 @@ export class AiInsightsPanelComponent {
   readonly insights = input.required<TrendingInsights>();
 
   readonly sourceLabel = computed(() =>
-    this.insights().source === 'ai' ? 'Generado con IA' : 'Análisis automático de Kino');
+    // The backend connects to Google Gemini (AI_PROVIDER=gemini); the API key never reaches the browser.
+    this.insights().source === 'ai' ? 'Generado con Gemini IA' : 'Análisis automático de Kino');
   readonly maxCategoryViews = computed(() =>
     Math.max(1, ...this.insights().topCategories.map(category => category.totalViews)));
 

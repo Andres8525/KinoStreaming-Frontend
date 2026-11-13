@@ -3,6 +3,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { apiErrorMessage } from '../../core/api/api-error';
+import { normalizeText } from '../../core/text/normalize-text';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
 
@@ -93,7 +94,7 @@ export class CreatorStudioComponent implements OnInit {
     const tags = [this.selectedCategory(), ...this.tags()]
       .map(tag => tag.trim())
       .filter((tag, index, allTags) =>
-        tag && allTags.findIndex(candidate => normalizeTag(candidate) === normalizeTag(tag)) === index
+        tag && allTags.findIndex(candidate => normalizeText(candidate) === normalizeText(tag)) === index
       );
 
     if (!title || !description || !this.selectedCategory() || !isHttpUrl(videoUrl)) {
@@ -176,9 +177,4 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
-}
-
-
-function normalizeTag(tag: string): string {
-  return tag.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 }

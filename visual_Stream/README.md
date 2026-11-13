@@ -1,67 +1,59 @@
-# VisualStream
+# Kino — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.9.
+Angular 21 web app for **Kino**, a streaming platform for independent creators. It talks to the Kino REST API (Spring Boot, deployed on Render, data in Supabase).
 
-## Kino streaming features
+## Requirements
 
-The Angular app calls the Kino backend at `http://localhost:8080/api`. The authenticated dashboard loads the public catalog and trending list, plus personalized recommendations from `/api/feed/recommendations`. Creator Studio publishes video metadata to `/api/creator/videos` and reads the creator analytics endpoint.
-
-Videos stream directly from their `videoUrl`; provide a publicly reachable URL in a browser-supported format (for example, MP4). Binary uploads, payments, and a trained/external AI model are not configured. Recommendations use the backend's local collaborative-plus-popularity ranker.
-
-For creator features, sign in with an account whose backend role is `CREATOR`. See the backend README for API, database, and migration details.
-
-## Development server
-
-To start a local development server, run:
+- Node.js `^20.19.0 || ^22.12.0 || >=24.0.0`
+- npm 10
 
 ```bash
-ng serve
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Backend URL per environment
 
-## Code scaffolding
+The API base URL is defined in `src/environments`:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Command | File | API |
+| --- | --- | --- |
+| `npm start` (`ng serve`) | `environment.development.ts` | `http://localhost:8081/api` (backend running locally) |
+| `npm run build` (`ng build`) | `environment.ts` | `https://kino-backend-alq2.onrender.com/api` (Render) |
+
+Every service builds its URLs from `API_BASE_URL` (`src/app/core/api/api.constants.ts`), so changing the environment file is enough. The backend must allow the frontend origin in `CORS_ALLOWED_ORIGINS`.
+
+The Render free plan sleeps after 15 minutes without traffic, so the first request afterwards can take about a minute.
+
+## Scripts
 
 ```bash
-ng generate component component-name
+npm start                         # dev server at http://localhost:4200
+npm run build                     # production build in dist/visual_Stream
+npm test -- --watch=false         # unit tests (Vitest)
+npm run serve:ssr:visual_Stream   # serve the production build with SSR on port 4000
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Features
 
-```bash
-ng generate --help
+- **Accounts**: registration and login with JWT. The session lives in `sessionStorage`; expired tokens are discarded, and if the API rejects the session (401) the user is signed out and sent back to login, returning to the same page afterwards.
+- **Dashboard**: personalized recommendations, trending videos and the full catalog, with accent-insensitive search (`?q=`) and category filters. Video cards show whether access is free or paid.
+- **Player**: streams each video from its `videoUrl`, records one view per session and shows the video title in the browser tab.
+- **Creator Studio** (only `CREATOR` accounts): publish videos with tags, access price and suggested donation, see analytics, and delete published videos. Viewers do not see the link and are redirected with an explanation.
+- **Not-found page** for unknown URLs and branded tab titles (`<page> · Kino`).
+
+New accounts are created as `VIEWER`. The `CREATOR` role is granted by an administrator in the database (see the backend README). Payments and file uploads are not implemented: videos are published by URL and must be publicly reachable in a browser-supported format such as MP4.
+
+## Project structure
+
 ```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
+src/app/
+  core/
+    api/        API base URL and error message helpers
+    auth/       auth service, guards, interceptors, JWT helpers
+    routing/    page title strategy
+    text/       accent-insensitive text normalization
+    videos/     video API service, models and formatters
+  components/   navbar, video card
+  pages/        dashboard, video player, creator studio, login, register, not found
+src/environments/  API URL per build configuration
 ```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, ParamMap, provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
@@ -35,6 +36,28 @@ describe('VideoPlayerComponent', () => {
     firstResponse.next(createVideo('first'));
 
     expect(fixture.componentInstance.video()?.id).toBe('second');
+    expect(TestBed.inject(Title).getTitle()).toBe('Video second · Kino');
+  });
+
+  it('records a view only once per video and updates the counter', async () => {
+    const recordView = vi.fn(() => of({ viewCount: 2500 }));
+    await TestBed.configureTestingModule({
+      imports: [VideoPlayerComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'clip' })) } },
+        { provide: VideoApiService, useValue: { getVideo: () => of(createVideo('clip')), getTrending: () => of([]), recordView } },
+        { provide: AuthService, useValue: { isAuthenticated: () => true } }
+      ]
+    }).compileComponents();
+    const fixture = TestBed.createComponent(VideoPlayerComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.recordView();
+    fixture.componentInstance.recordView();
+
+    expect(recordView).toHaveBeenCalledOnce();
+    expect(fixture.componentInstance.video()?.viewCount).toBe(2500);
   });
 });
 

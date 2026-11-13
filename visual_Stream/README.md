@@ -46,11 +46,12 @@ The app is deployed as static files: `login` and `register` are prerendered, and
 3. **Deploy**. No environment variables are needed: the API URL is compiled from `src/environments/environment.ts`.
 4. Add the Vercel domain (for example `https://kino-frontend.vercel.app`) to `CORS_ALLOWED_ORIGINS` in the Render backend, separated by commas from the existing values, and save. Without it the browser blocks every API call.
 
-Preview deployments get a different URL each time, so they can only call the API if that exact origin is also allowed in CORS.
+Vercel also serves every deployment on its own URL (`https://<project>-<hash>-<team>.vercel.app`, opened by the dashboard's "Visit" button) and on branch URLs. The backend allows them automatically for each `https://<project>.vercel.app` in `CORS_ALLOWED_ORIGINS`, and it also allows `http://localhost:<port>` for local development.
 
 ## Troubleshooting
 
 - **"No se pudo conectar con el servidor de Kino" on login or register**: the browser could not reach the API. Open `https://kino-backend-alq2.onrender.com/api/health`: `cors.origins` must contain the exact frontend origin (for example `https://kino-streamingg-frontend.vercel.app`). If it is missing, fix `CORS_ALLOWED_ORIGINS` in Render; the backend also accepts bare domains and trailing slashes.
+- **"El servidor de Kino está en línea, pero no acepta peticiones desde …"**: after a connection error the app checks `/api/health` again and, if that fails, contacts the server in `no-cors` mode. When the server answers, the problem is CORS, so the message names the address the page was opened from: open Kino from its main address or add that address to `CORS_ALLOWED_ORIGINS`. In a development build pointing to `localhost`, an unreachable API shows "No se pudo conectar con el backend local" instead.
 - **First request is slow**: the Render free plan sleeps after 15 minutes. The app pings `/api/health` as soon as it opens, retries read requests (GET) on network/502/503/504 errors and shows a "Conectando con el servidor…" notice on the login and registration forms. Writes such as creating an account are never retried automatically.
 - **Pages without styles**: `.postcssrc.json` must exist so Tailwind generates its utility classes.
 

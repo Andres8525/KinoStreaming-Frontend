@@ -27,6 +27,9 @@
         @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
           <p class="mt-1 text-sm text-red-600">El nombre es obligatorio (máximo 120 caracteres).</p>
         }
+        @if (serverErrors()['displayName']; as serverError) {
+          <p class="mt-1 text-sm text-red-600" role="alert">{{ serverError }}</p>
+        }
       </div>
 
       <div>
@@ -37,6 +40,9 @@
         @if (form.controls.email.touched && form.controls.email.invalid) {
           <p class="mt-1 text-sm text-red-600">Introduce un correo electrónico válido.</p>
         }
+        @if (serverErrors()['email']; as serverError) {
+          <p class="mt-1 text-sm text-red-600" role="alert">{{ serverError }}</p>
+        }
       </div>
 
       <div>
@@ -46,6 +52,9 @@
                placeholder="Mínimo 8 caracteres">
         @if (form.controls.password.touched && form.controls.password.invalid) {
           <p class="mt-1 text-sm text-red-600">Usa entre 8 y 72 caracteres.</p>
+        }
+        @if (serverErrors()['password']; as serverError) {
+          <p class="mt-1 text-sm text-red-600" role="alert">{{ serverError }}</p>
         }
       </div>
 

@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { apiErrorMessage } from '../../core/api/api-error';
+import { apiErrorMessage, apiValidationErrors } from '../../core/api/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -17,6 +17,8 @@ export class RegisterComponent {
 
   readonly submitting = signal(false);
   readonly errorMessage = signal('');
+  /** Field errors returned by the backend (400), keyed by form control name. */
+  readonly serverErrors = signal<Record<string, string>>({});
   readonly form = this.formBuilder.nonNullable.group({
     displayName: ['', [Validators.required, Validators.maxLength(120)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
@@ -31,10 +33,12 @@ export class RegisterComponent {
 
     this.submitting.set(true);
     this.errorMessage.set('');
+    this.serverErrors.set({});
     this.authService.register(this.form.getRawValue()).subscribe({
       next: () => void this.router.navigateByUrl('/'),
       error: (error: unknown) => {
         this.errorMessage.set(apiErrorMessage(error, 'No se pudo crear la cuenta. Inténtalo de nuevo.'));
+        this.serverErrors.set(apiValidationErrors(error));
         this.submitting.set(false);
       },
       complete: () => this.submitting.set(false)

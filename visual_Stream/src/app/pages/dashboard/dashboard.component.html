@@ -55,7 +55,10 @@
     <section class="hero-section dashboard-state">
       <h1>Tu próxima historia empieza aquí</h1>
       <p>Aún no hay videos publicados. Sé el primero en compartir tu historia o empieza a transmitir en vivo.</p>
-      <a routerLink="/creator-studio" class="btn-primary">Publicar un video</a>
+      <div class="cta-actions hero-empty-actions">
+        <a routerLink="/creator-studio" class="btn-primary">Publicar un video</a>
+        <a routerLink="/creator-studio" [queryParams]="{ tab: 'live' }" class="btn-secondary">Transmitir en vivo</a>
+      </div>
     </section>
   }
 

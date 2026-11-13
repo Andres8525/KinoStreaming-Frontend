@@ -130,6 +130,17 @@ describe('DashboardComponent', () => {
     expect(showcase.querySelector('a[href="/creator-studio"]')).not.toBeNull();
   });
 
+  it('offers to publish or go live when there are no videos yet', () => {
+    videoApi.getCatalog.mockReturnValue(of([]));
+    videoApi.getTrending.mockReturnValue(of([]));
+    videoApi.getRecommendations.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const links = [...fixture.nativeElement.querySelectorAll('.hero-empty-actions a')] as HTMLAnchorElement[];
+
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/creator-studio', '/creator-studio?tab=live']);
+  });
+
   it('shows no category section for "Todo"', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();

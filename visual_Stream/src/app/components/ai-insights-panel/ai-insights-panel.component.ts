@@ -3,7 +3,6 @@ import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TrendingInsights } from '../../core/ai/ai-insights.models';
 
-/** "Kino IA" panel: AI (or built-in) summary of what is most watched on Kino. */
 @Component({
   selector: 'app-ai-insights-panel',
   standalone: true,
@@ -15,7 +14,6 @@ export class AiInsightsPanelComponent {
   readonly insights = input.required<TrendingInsights>();
 
   readonly sourceLabel = computed(() =>
-    // The backend connects to Google Gemini (AI_PROVIDER=gemini); the API key never reaches the browser.
     this.insights().source === 'ai' ? 'Generado con Gemini IA' : 'Análisis automático de Kino');
   readonly maxCategoryViews = computed(() =>
     Math.max(1, ...this.insights().topCategories.map(category => category.totalViews)));

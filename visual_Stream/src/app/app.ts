@@ -15,7 +15,6 @@ export class App {
   title = 'Kino';
 
   constructor() {
-    // Start waking the backend (it may be sleeping on a free plan) while the user reads the page.
     if (isPlatformBrowser(inject(PLATFORM_ID))) {
       inject(ServerStatusService).wakeUp().subscribe();
     }

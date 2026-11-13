@@ -33,6 +33,17 @@ npm test -- --watch=false         # unit tests (Vitest)
 npm run serve:ssr:visual_Stream   # serve the production build with SSR on port 4000
 ```
 
+## Deploy to Vercel
+
+The app is deployed as static files: `login` and `register` are prerendered, and every other page (dashboard, player, Creator Studio) is rendered in the browser, because the session lives in `sessionStorage`. `vercel.json` already contains the build settings, the fallback to `index.csr.html` for client routes, long-term caching for hashed assets and basic security headers.
+
+1. Vercel > **Add New** > **Project** > import `KinoStreaming-Frontend` from GitHub.
+2. Set **Root Directory** to `visual_Stream` (the Angular app is in that folder). Leave the framework preset as detected; `vercel.json` overrides the build command and the output directory.
+3. **Deploy**. No environment variables are needed: the API URL is compiled from `src/environments/environment.ts`.
+4. Add the Vercel domain (for example `https://kino-frontend.vercel.app`) to `CORS_ALLOWED_ORIGINS` in the Render backend, separated by commas from the existing values, and save. Without it the browser blocks every API call.
+
+Preview deployments get a different URL each time, so they can only call the API if that exact origin is also allowed in CORS.
+
 ## Features
 
 - **Accounts**: registration and login with JWT. The session lives in `sessionStorage`; expired tokens are discarded, and if the API rejects the session (401) the user is signed out and sent back to login, returning to the same page afterwards.

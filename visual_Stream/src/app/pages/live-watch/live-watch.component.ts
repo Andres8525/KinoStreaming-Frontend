@@ -1,19 +1,23 @@
 import { isPlatformBrowser } from '@angular/common';
 import {
-  Component, DestroyRef, effect, ElementRef, inject, OnInit, PLATFORM_ID, signal, viewChild
+  Component, computed, DestroyRef, effect, ElementRef, inject, OnInit, PLATFORM_ID, signal, viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import type Hls from 'hls.js';
 import { catchError, distinctUntilChanged, filter, interval, map, of, switchMap, tap } from 'rxjs';
+import { CameraViewer } from '../../core/live/camera-viewer';
 import { LiveApiService } from '../../core/live/live-api.service';
 import { LiveStreamData } from '../../core/live/live.models';
 import { APP_NAME } from '../../core/routing/kino-title.strategy';
 
 const STATUS_POLL_MS = 30_000;
 
-/** Watch page for a live broadcast. Plays HLS with hls.js (loaded on demand) or natively on Safari. */
+/**
+ * Watch page for a live broadcast. Camera broadcasts connect directly to the creator's browser over WebRTC;
+ * HLS broadcasts play with hls.js (loaded on demand) or natively on Safari.
+ */
 @Component({
   selector: 'app-live-watch',
   standalone: true,
@@ -30,17 +34,27 @@ export class LiveWatchComponent implements OnInit {
   private readonly player = viewChild<ElementRef<HTMLVideoElement>>('player');
   private hls: Hls | null = null;
   private attachedUrl: string | null = null;
+  private readonly cameraViewer = signal<CameraViewer | null>(null);
 
   readonly stream = signal<LiveStreamData | null>(null);
   readonly isLoading = signal(true);
   readonly errorMessage = signal('');
   readonly playbackMessage = signal('');
+  /** Connection state of a camera broadcast; null for HLS broadcasts. */
+  readonly cameraState = computed(() => this.cameraViewer()?.state() ?? null);
 
   constructor() {
     effect(() => {
       const element = this.player()?.nativeElement;
       const stream = this.stream();
-      if (element && stream?.isLive && stream.playbackUrl !== this.attachedUrl) {
+      if (!element || !stream?.isLive) {
+        return;
+      }
+      if (stream.sourceType === 'CAMERA') {
+        if (!this.cameraViewer()) {
+          this.watchCamera(element, stream.id);
+        }
+      } else if (stream.playbackUrl !== this.attachedUrl) {
         this.attachedUrl = stream.playbackUrl;
         void this.attachSource(element, stream.playbackUrl);
       }
@@ -96,6 +110,19 @@ export class LiveWatchComponent implements OnInit {
     }
   }
 
+  private watchCamera(video: HTMLVideoElement, streamId: string): void {
+    if (!this.isBrowser || typeof RTCPeerConnection === 'undefined') {
+      this.playbackMessage.set('Tu navegador no puede reproducir transmisiones en vivo desde cámara. Usa Chrome, Edge, Firefox o Safari.');
+      return;
+    }
+    const viewer = new CameraViewer(this.liveApi, streamId, media => {
+      video.srcObject = media;
+      void video.play().catch(() => undefined);
+    });
+    this.cameraViewer.set(viewer);
+    void viewer.connect();
+  }
+
   private async attachSource(video: HTMLVideoElement, url: string): Promise<void> {
     this.playbackMessage.set('');
     const isHls = /\.m3u8(\?|#|$)/i.test(url);
@@ -121,6 +148,8 @@ export class LiveWatchComponent implements OnInit {
   }
 
   private destroyPlayer(): void {
+    this.cameraViewer()?.stop();
+    this.cameraViewer.set(null);
     this.hls?.destroy();
     this.hls = null;
     this.attachedUrl = null;

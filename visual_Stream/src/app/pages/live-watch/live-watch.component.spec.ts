@@ -38,6 +38,17 @@ describe('LiveWatchComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('La transmisión ha finalizado');
   });
 
+  it('connects to a camera broadcast over WebRTC instead of loading a URL', async () => {
+    const fixture = await render(() => of(stream(true, '', 'CAMERA')));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const video = fixture.nativeElement.querySelector('video') as HTMLVideoElement;
+
+    expect(video.getAttribute('src')).toBeNull();
+    // jsdom has no WebRTC, so the page explains that this browser cannot play camera broadcasts.
+    expect(fixture.componentInstance.playbackMessage()).toContain('transmisiones en vivo desde cámara');
+  });
+
   it('explains when the broadcast cannot be loaded', async () => {
     const fixture = await render(() => throwError(() => new Error('404')));
 
@@ -45,9 +56,9 @@ describe('LiveWatchComponent', () => {
   });
 });
 
-function stream(isLive: boolean, playbackUrl: string): LiveStreamData {
+function stream(isLive: boolean, playbackUrl: string, sourceType: 'CAMERA' | 'HLS' = 'HLS'): LiveStreamData {
   return {
-    id: 'stream-1', title: 'Ensayo abierto', description: 'Ensayo de la banda', category: 'Música', playbackUrl,
+    id: 'stream-1', title: 'Ensayo abierto', description: 'Ensayo de la banda', category: 'Música', sourceType, playbackUrl,
     thumbnail: '', isLive, creator: 'Ana Ruiz', creatorAvatar: 'AR', startedAt: '2026-11-12T11:00:00Z',
     startedAgo: 'hace 1 hora', endedAt: isLive ? null : '2026-11-12T12:00:00Z'
   };

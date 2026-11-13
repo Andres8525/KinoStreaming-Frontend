@@ -14,6 +14,17 @@
                  [attr.poster]="live.thumbnail || null" (error)="onPlaybackError()"
                  [attr.aria-label]="'Transmisión en vivo: ' + live.title"></video>
           <span class="live-badge">EN VIVO</span>
+          @if (cameraState(); as state) {
+            @if (state !== 'connected') {
+              <div class="live-camera-status" role="status">
+                @switch (state) {
+                  @case ('waiting') { <p>Esperando a que {{ live.creator }} encienda su cámara…</p> }
+                  @case ('failed') { <p>No pudimos conectar con la cámara de {{ live.creator }}. Reintentando…</p> }
+                  @default { <p>Conectando con la cámara de {{ live.creator }}…</p> }
+                }
+              </div>
+            }
+          }
         } @else {
           <div class="live-ended" role="status">
             <p class="live-ended-title">La transmisión ha finalizado</p>

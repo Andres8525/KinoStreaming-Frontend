@@ -1,7 +1,5 @@
-<!-- Navbar -->
 <nav class="navbar" [class.scrolled]="true">
   <div class="navbar-container">
-    <!-- Logo -->
     <a routerLink="/" class="logo-link">
       <div class="logo-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
@@ -11,7 +9,6 @@
       <span class="logo-text">Kino</span>
     </a>
 
-    <!-- Nav Links (Desktop) -->
     <div class="nav-links">
       <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="nav-icon">
@@ -35,7 +32,6 @@
       }
     </div>
 
-    <!-- Search Bar -->
     <div class="search-wrapper" [class.search-focused]="isSearchFocused()">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="search-icon" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
@@ -53,7 +49,6 @@
       />
     </div>
 
-    <!-- User Profile -->
     <div class="user-section">
       @if (user$ | async; as user) {
         <span class="user-email">{{ user.email }}</span>
@@ -64,7 +59,6 @@
       }
     </div>
 
-    <!-- Mobile Menu Toggle -->
     <button type="button" class="mobile-menu-btn" (click)="toggleMenu()"
             [attr.aria-label]="isMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
             [attr.aria-expanded]="isMenuOpen()" aria-controls="mobile-menu">
@@ -80,7 +74,6 @@
     </button>
   </div>
 
-  <!-- Mobile Menu -->
   @if (isMenuOpen()) {
     <div id="mobile-menu" class="mobile-menu animate-slide-up">
       <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="mobile-link" (click)="toggleMenu()">

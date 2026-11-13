@@ -31,12 +31,13 @@ describe('NavbarComponent', () => {
     expect(element.querySelector('a[href="/creator-studio"]')).toBeNull();
   });
 
-  it('hides Creator Studio from viewers', () => {
+  it('shows Creator Studio and "Transmitir" to every signed-in account, including older VIEWER accounts', () => {
     user$.next({ email: 'viewer@example.com', role: 'VIEWER' });
     const { element } = render();
 
     expect(element.textContent).toContain('viewer@example.com');
-    expect(element.querySelector('a[href="/creator-studio"]')).toBeNull();
+    expect(element.querySelector('a[href="/creator-studio"]')).not.toBeNull();
+    expect(element.querySelector('a[href="/creator-studio?tab=live"]')).not.toBeNull();
   });
 
   it('shows Creator Studio to creators', () => {

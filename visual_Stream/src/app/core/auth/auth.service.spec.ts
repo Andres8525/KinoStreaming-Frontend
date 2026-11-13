@@ -42,13 +42,13 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
   });
 
-  it('reports the creator role of the current user', () => {
+  it('lets every signed-in account publish and go live, including older VIEWER accounts', () => {
     expect(service.isCreator()).toBe(false);
 
     service.login({ email: response.email, password: 'secure-password' }).subscribe();
-    httpTesting.expectOne(`${API_BASE_URL}/auth/login`).flush({ ...response, role: 'CREATOR' });
+    httpTesting.expectOne(`${API_BASE_URL}/auth/login`).flush({ ...response, role: 'VIEWER' });
 
-    expect(service.currentUser()).toEqual({ email: response.email, role: 'CREATOR' });
+    expect(service.currentUser()).toEqual({ email: response.email, role: 'VIEWER' });
     expect(service.isCreator()).toBe(true);
   });
 

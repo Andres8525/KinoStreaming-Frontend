@@ -3,7 +3,9 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { API_BASE_URL } from '../api/api.constants';
 import { formatTimeAgo, initials } from '../videos/video-format';
-import { LiveStreamData, LiveStreamResponse, StartLiveStreamRequest } from './live.models';
+import {
+  LiveStreamData, LiveStreamResponse, LiveViewerSession, PendingViewer, StartLiveStreamRequest
+} from './live.models';
 
 @Injectable({ providedIn: 'root' })
 export class LiveApiService {
@@ -31,6 +33,29 @@ export class LiveApiService {
     return this.http.post<LiveStreamResponse>(this.creatorLiveUrl, request).pipe(map(toLiveStreamData));
   }
 
+  /** Viewer: sends the WebRTC offer for a camera broadcast (requires a session). */
+  requestViewing(streamId: string, offer: string): Observable<LiveViewerSession> {
+    return this.http.post<LiveViewerSession>(`${this.liveUrl}/${encodeURIComponent(streamId)}/viewers`, { sdp: offer });
+  }
+
+  /** Viewer: polls for the creator's answer. */
+  getViewerSession(streamId: string, sessionId: string): Observable<LiveViewerSession> {
+    return this.http.get<LiveViewerSession>(
+      `${this.liveUrl}/${encodeURIComponent(streamId)}/viewers/${encodeURIComponent(sessionId)}`);
+  }
+
+  /** Creator: viewers waiting for an answer. Polling it also tells Kino the camera is still on. */
+  getPendingViewers(streamId: string): Observable<PendingViewer[]> {
+    return this.http.get<PendingViewer[]>(`${this.creatorLiveUrl}/${encodeURIComponent(streamId)}/viewers/pending`);
+  }
+
+  /** Creator: sends the WebRTC answer for one viewer. */
+  answerViewer(streamId: string, sessionId: string, answer: string): Observable<void> {
+    return this.http.post<void>(
+      `${this.creatorLiveUrl}/${encodeURIComponent(streamId)}/viewers/${encodeURIComponent(sessionId)}/answer`,
+      { sdp: answer });
+  }
+
   endStream(streamId: string): Observable<LiveStreamData> {
     return this.http.post<LiveStreamResponse>(`${this.creatorLiveUrl}/${encodeURIComponent(streamId)}/end`, {})
       .pipe(map(toLiveStreamData));
@@ -43,7 +68,8 @@ export function toLiveStreamData(stream: LiveStreamResponse): LiveStreamData {
     title: stream.title,
     description: stream.description ?? '',
     category: stream.category,
-    playbackUrl: stream.playbackUrl,
+    sourceType: stream.sourceType ?? 'HLS',
+    playbackUrl: stream.playbackUrl ?? '',
     thumbnail: stream.thumbnailUrl ?? '',
     isLive: stream.status === 'LIVE',
     creator: stream.creator.displayName,

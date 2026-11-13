@@ -14,6 +14,7 @@ describe('LiveApiService', () => {
     title: 'Ensayo abierto',
     description: null,
     category: 'Música',
+    sourceType: 'HLS',
     playbackUrl: 'https://live.example.com/stream.m3u8',
     thumbnailUrl: null,
     status: 'LIVE',
@@ -51,7 +52,9 @@ describe('LiveApiService', () => {
   });
 
   it('starts and ends a broadcast', () => {
-    service.startStream({ title: 'Ensayo abierto', category: 'Música', playbackUrl: response.playbackUrl }).subscribe();
+    service.startStream({
+      title: 'Ensayo abierto', category: 'Música', sourceType: 'HLS', playbackUrl: response.playbackUrl ?? undefined
+    }).subscribe();
     const start = httpTesting.expectOne(`${API_BASE_URL}/creator/live`);
     expect(start.request.method).toBe('POST');
     expect(start.request.body.title).toBe('Ensayo abierto');
@@ -63,5 +66,43 @@ describe('LiveApiService', () => {
       .flush({ ...response, status: 'ENDED', endedAt: new Date().toISOString() });
 
     expect(ended?.isLive).toBe(false);
+  });
+
+  it('maps camera broadcasts without a playback URL', () => {
+    let streams: LiveStreamData[] = [];
+    service.getLiveNow().subscribe(result => streams = result);
+
+    httpTesting.expectOne(`${API_BASE_URL}/live`).flush([{ ...response, sourceType: 'CAMERA', playbackUrl: null }]);
+
+    expect(streams[0]).toEqual(expect.objectContaining({ sourceType: 'CAMERA', playbackUrl: '' }));
+  });
+
+  it('treats broadcasts from older backends as HLS', () => {
+    let streams: LiveStreamData[] = [];
+    service.getLiveNow().subscribe(result => streams = result);
+
+    const { sourceType: _ignored, ...legacy } = response;
+    httpTesting.expectOne(`${API_BASE_URL}/live`).flush([legacy]);
+
+    expect(streams[0].sourceType).toBe('HLS');
+  });
+
+  it('relays the WebRTC offer and answer of a camera broadcast', () => {
+    service.requestViewing('stream-1', 'offer-sdp').subscribe();
+    const offer = httpTesting.expectOne(`${API_BASE_URL}/live/stream-1/viewers`);
+    expect(offer.request.method).toBe('POST');
+    expect(offer.request.body).toEqual({ sdp: 'offer-sdp' });
+    offer.flush({ sessionId: 's1', answer: null });
+
+    service.getViewerSession('stream-1', 's1').subscribe();
+    httpTesting.expectOne(`${API_BASE_URL}/live/stream-1/viewers/s1`).flush({ sessionId: 's1', answer: 'answer-sdp' });
+
+    service.getPendingViewers('stream-1').subscribe();
+    httpTesting.expectOne(`${API_BASE_URL}/creator/live/stream-1/viewers/pending`).flush([]);
+
+    service.answerViewer('stream-1', 's1', 'answer-sdp').subscribe();
+    const answer = httpTesting.expectOne(`${API_BASE_URL}/creator/live/stream-1/viewers/s1/answer`);
+    expect(answer.request.body).toEqual({ sdp: 'answer-sdp' });
+    answer.flush(null, { status: 204, statusText: 'No Content' });
   });
 });

@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ServerStatusService } from '../../core/api/server-status.service';
-import { apiErrorMessage } from '../../core/api/api-error';
+import { apiErrorMessage, isConnectionError } from '../../core/api/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -19,7 +19,8 @@ export class LoginComponent {
 
   readonly submitting = signal(false);
   /** Lets the form explain a slow first request while a sleeping backend starts. */
-  readonly serverState = inject(ServerStatusService).state;
+  private readonly serverStatus = inject(ServerStatusService);
+  readonly serverState = this.serverStatus.state;
   readonly errorMessage = signal('');
   readonly sessionExpired = this.route.snapshot.queryParamMap.has('expired');
   readonly form = this.formBuilder.nonNullable.group({
@@ -46,6 +47,10 @@ export class LoginComponent {
       error: (error: unknown) => {
         this.errorMessage.set(apiErrorMessage(error, 'No se pudo iniciar sesión. Inténtalo de nuevo.'));
         this.submitting.set(false);
+        if (isConnectionError(error)) {
+          // Replace the generic text with the actual cause: sleeping server, blocked address or local backend.
+          void this.serverStatus.connectionErrorMessage().then(message => this.errorMessage.set(message));
+        }
       },
       complete: () => this.submitting.set(false)
     });

@@ -11,14 +11,16 @@ const serverState = signal<ServerState>('online');
 
 describe('LoginComponent', () => {
   let login: ReturnType<typeof vi.fn>;
+  let connectionErrorMessage: ReturnType<typeof vi.fn>;
 
   async function setup(queryParams: Record<string, string> = {}) {
     login = vi.fn();
+    connectionErrorMessage = vi.fn();
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
       providers: [
         provideRouter([]),
-        { provide: ServerStatusService, useValue: { state: serverState } },
+        { provide: ServerStatusService, useValue: { state: serverState, connectionErrorMessage } },
         { provide: AuthService, useValue: { login } },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } }
       ]
@@ -71,6 +73,30 @@ describe('LoginComponent', () => {
 
     expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent).toContain('Correo o contraseña incorrectos');
     expect(fixture.componentInstance.submitting()).toBe(false);
+  });
+
+  it('explains why the server could not be reached', async () => {
+    const fixture = await setup();
+    connectionErrorMessage.mockResolvedValue('El servidor de Kino está en línea, pero no acepta peticiones desde https://x');
+    login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0, error: new ProgressEvent('error') })));
+    fixture.componentInstance.form.setValue({ email: 'viewer@example.com', password: 'secret-123' });
+
+    fixture.componentInstance.submit();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(connectionErrorMessage).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent).toContain('no acepta peticiones desde');
+  });
+
+  it('does not diagnose the connection for answers from the backend', async () => {
+    const fixture = await setup();
+    login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 401, error: { message: 'x' } })));
+    fixture.componentInstance.form.setValue({ email: 'viewer@example.com', password: 'wrong-pass' });
+
+    fixture.componentInstance.submit();
+
+    expect(connectionErrorMessage).not.toHaveBeenCalled();
   });
 
   it('explains that the session expired', async () => {

@@ -42,6 +42,16 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
   });
 
+  it('drops an expired stored token and its profile', () => {
+    const claims = btoa(JSON.stringify({ sub: response.email, exp: Math.floor(Date.now() / 1000) - 60 }));
+    sessionStorage.setItem('kino.accessToken', `header.${claims.replace(/=+$/, '')}.signature`);
+    sessionStorage.setItem('kino.user', JSON.stringify({ email: response.email, role: response.role }));
+
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.getToken()).toBeNull();
+    expect(sessionStorage.getItem('kino.user')).toBeNull();
+  });
+
   it('clears the session on logout', () => {
     sessionStorage.setItem('kino.accessToken', response.accessToken);
     sessionStorage.setItem('kino.user', JSON.stringify({ email: response.email, role: response.role }));

@@ -18,6 +18,7 @@ export class LoginComponent {
 
   readonly submitting = signal(false);
   readonly errorMessage = signal('');
+  readonly sessionExpired = this.route.snapshot.queryParamMap.has('expired');
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
     password: ['', Validators.required]

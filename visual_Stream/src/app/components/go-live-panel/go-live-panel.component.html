@@ -1,0 +1,85 @@
+<section class="go-live">
+  @if (errorMessage()) {
+    <p class="go-live-message error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="go-live-message success" role="status">{{ successMessage() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="go-live-card" aria-live="polite">Comprobando tu estado de transmisión…</p>
+  } @else if (currentStream(); as stream) {
+    <article class="go-live-card go-live-status">
+      <div class="status-header">
+        <span class="status-badge">EN VIVO</span>
+        <span class="status-since">Desde {{ stream.startedAgo }}</span>
+      </div>
+      <h2 class="go-live-title">{{ stream.title }}</h2>
+      <p class="go-live-desc">{{ stream.category }}@if (stream.description) { · {{ stream.description }} }</p>
+      <p class="status-url"><span>Reproducción:</span> {{ stream.playbackUrl }}</p>
+      <div class="go-live-actions">
+        <a class="go-live-btn secondary" [routerLink]="['/live', stream.id]">Ver mi transmisión</a>
+        <button type="button" class="go-live-btn danger" [disabled]="isSubmitting()" (click)="endStream()">
+          {{ isSubmitting() ? 'Finalizando…' : 'Finalizar transmisión' }}
+        </button>
+      </div>
+    </article>
+  } @else {
+    <div class="go-live-grid">
+      <form class="go-live-card" [formGroup]="form" (ngSubmit)="startStream()" novalidate>
+        <h2 class="go-live-title">Iniciar transmisión</h2>
+        <p class="go-live-desc">Tu directo aparecerá en «En vivo ahora» del inicio de Kino mientras esté activo.</p>
+
+        <label class="field" for="live-title">
+          <span>Título</span>
+          <input id="live-title" type="text" formControlName="title" maxlength="180" placeholder="Ej.: Montando mi cortometraje en vivo"/>
+          @if (hasError('title')) { <small class="field-error">Escribe un título (máximo 180 caracteres).</small> }
+        </label>
+
+        <label class="field" for="live-category">
+          <span>Categoría</span>
+          <select id="live-category" formControlName="category">
+            <option value="" disabled>Selecciona una categoría</option>
+            @for (category of categories; track category) {
+              <option [value]="category">{{ category }}</option>
+            }
+          </select>
+          @if (hasError('category')) { <small class="field-error">Elige una categoría.</small> }
+        </label>
+
+        <label class="field" for="live-description">
+          <span>Descripción <em>(opcional)</em></span>
+          <textarea id="live-description" rows="3" formControlName="description" maxlength="1000"></textarea>
+        </label>
+
+        <label class="field" for="live-playback-url">
+          <span>URL de reproducción (HLS .m3u8)</span>
+          <input id="live-playback-url" type="url" formControlName="playbackUrl" placeholder="https://tu-servicio.com/live/stream.m3u8"/>
+          @if (hasError('playbackUrl')) { <small class="field-error">Introduce una URL HTTP o HTTPS válida.</small> }
+        </label>
+
+        <label class="field" for="live-thumbnail-url">
+          <span>Miniatura <em>(opcional)</em></span>
+          <input id="live-thumbnail-url" type="url" formControlName="thumbnailUrl" placeholder="https://cdn.example.com/portada.jpg"/>
+          @if (hasError('thumbnailUrl')) { <small class="field-error">Introduce una URL HTTP o HTTPS válida.</small> }
+        </label>
+
+        <button type="submit" class="go-live-btn primary" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Iniciando…' : 'Iniciar transmisión' }}
+        </button>
+      </form>
+
+      <aside class="go-live-card go-live-help">
+        <h3>¿Cómo transmitir?</h3>
+        <ol>
+          <li>Crea una entrada en vivo en tu servicio de streaming (Cloudflare Stream, Mux, AWS IVS o un servidor nginx-rtmp propio).</li>
+          <li>En OBS, ve a <strong>Ajustes → Emisión</strong> y pega el servidor RTMP y la clave de transmisión de ese servicio.</li>
+          <li>Pulsa <strong>Iniciar transmisión</strong> en OBS.</li>
+          <li>Copia aquí la URL pública de reproducción <strong>HLS (.m3u8)</strong> y pulsa «Iniciar transmisión».</li>
+          <li>Cuando termines, detén OBS y pulsa «Finalizar transmisión».</li>
+        </ol>
+        <p class="help-note">Kino no recibe el video directamente: lo reproduce desde la URL pública de tu servicio de streaming.</p>
+      </aside>
+    </div>
+  }
+</section>

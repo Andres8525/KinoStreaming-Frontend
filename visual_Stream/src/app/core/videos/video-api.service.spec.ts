@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { API_BASE_URL } from '../api/api.constants';
 import { VideoApiService } from './video-api.service';
 import { VideoResponse } from './video.models';
 
@@ -36,7 +37,7 @@ describe('VideoApiService', () => {
     let result: unknown;
     service.getRecommendations().subscribe(videos => result = videos);
 
-    httpTesting.expectOne('http://localhost:8080/api/feed/recommendations').flush({
+    httpTesting.expectOne(`${API_BASE_URL}/feed/recommendations`).flush({
       strategy: 'hybrid-collaborative-popularity',
       generatedAt: '2026-11-10T12:00:00Z',
       recommendations: [video]
@@ -56,7 +57,7 @@ describe('VideoApiService', () => {
     let result: unknown;
     service.recordView(video.id).subscribe(response => result = response);
 
-    const request = httpTesting.expectOne(`http://localhost:8080/api/videos/${video.id}/views`);
+    const request = httpTesting.expectOne(`${API_BASE_URL}/videos/${video.id}/views`);
     expect(request.request.method).toBe('POST');
     request.flush({ viewCount: 2 });
 

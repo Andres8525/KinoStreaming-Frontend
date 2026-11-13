@@ -32,7 +32,6 @@ export class DashboardComponent implements OnInit {
 
   readonly categories = signal([ALL_CATEGORIES, ...VIDEO_CATEGORIES.map(category => category.name)]);
   readonly activeCategory = signal(ALL_CATEGORIES);
-  /** The selected category with its description; null for "Todo". */
   readonly activeCategoryInfo = computed(() => findCategory(this.activeCategory()) ?? null);
   readonly recommendations = signal<VideoCardData[]>([]);
   readonly trending = signal<VideoCardData[]>([]);
@@ -46,7 +45,6 @@ export class DashboardComponent implements OnInit {
 
   readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
   readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
-  /** Every published video of the selected category, newest catalog order. */
   readonly categoryVideos = computed(() => this.filterVideos(this.catalog()));
   readonly searchResults = computed(() => {
     const query = normalizeText(this.searchTerm());

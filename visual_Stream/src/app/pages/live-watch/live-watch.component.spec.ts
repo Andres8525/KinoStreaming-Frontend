@@ -45,7 +45,6 @@ describe('LiveWatchComponent', () => {
     const video = fixture.nativeElement.querySelector('video') as HTMLVideoElement;
 
     expect(video.getAttribute('src')).toBeNull();
-    // jsdom has no WebRTC, so the page explains that this browser cannot play camera broadcasts.
     expect(fixture.componentInstance.playbackMessage()).toContain('transmisiones en vivo desde cámara');
   });
 

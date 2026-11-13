@@ -14,10 +14,6 @@ import { APP_NAME } from '../../core/routing/kino-title.strategy';
 
 const STATUS_POLL_MS = 30_000;
 
-/**
- * Watch page for a live broadcast. Camera broadcasts connect directly to the creator's browser over WebRTC;
- * HLS broadcasts play with hls.js (loaded on demand) or natively on Safari.
- */
 @Component({
   selector: 'app-live-watch',
   standalone: true,
@@ -40,7 +36,6 @@ export class LiveWatchComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly errorMessage = signal('');
   readonly playbackMessage = signal('');
-  /** Connection state of a camera broadcast; null for HLS broadcasts. */
   readonly cameraState = computed(() => this.cameraViewer()?.state() ?? null);
 
   constructor() {

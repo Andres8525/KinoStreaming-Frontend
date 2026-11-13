@@ -18,7 +18,6 @@ export class LoginComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly submitting = signal(false);
-  /** Lets the form explain a slow first request while a sleeping backend starts. */
   private readonly serverStatus = inject(ServerStatusService);
   readonly serverState = this.serverStatus.state;
   readonly errorMessage = signal('');
@@ -48,7 +47,6 @@ export class LoginComponent {
         this.errorMessage.set(apiErrorMessage(error, 'No se pudo iniciar sesión. Inténtalo de nuevo.'));
         this.submitting.set(false);
         if (isConnectionError(error)) {
-          // Replace the generic text with the actual cause: sleeping server, blocked address or local backend.
           void this.serverStatus.connectionErrorMessage().then(message => this.errorMessage.set(message));
         }
       },

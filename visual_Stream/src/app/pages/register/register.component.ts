@@ -17,11 +17,9 @@ export class RegisterComponent {
   private readonly router = inject(Router);
 
   readonly submitting = signal(false);
-  /** Lets the form explain a slow first request while a sleeping backend starts. */
   private readonly serverStatus = inject(ServerStatusService);
   readonly serverState = this.serverStatus.state;
   readonly errorMessage = signal('');
-  /** Field errors returned by the backend (400), keyed by form control name. */
   readonly serverErrors = signal<Record<string, string>>({});
   readonly form = this.formBuilder.nonNullable.group({
     displayName: ['', [Validators.required, Validators.maxLength(120)]],
@@ -45,7 +43,6 @@ export class RegisterComponent {
         this.serverErrors.set(apiValidationErrors(error));
         this.submitting.set(false);
         if (isConnectionError(error)) {
-          // Replace the generic text with the actual cause: sleeping server, blocked address or local backend.
           void this.serverStatus.connectionErrorMessage().then(message => this.errorMessage.set(message));
         }
       },

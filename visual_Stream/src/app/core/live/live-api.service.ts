@@ -13,7 +13,6 @@ export class LiveApiService {
   private readonly liveUrl = `${API_BASE_URL}/live`;
   private readonly creatorLiveUrl = `${API_BASE_URL}/creator/live`;
 
-  /** Broadcasts that are live right now (public). */
   getLiveNow(): Observable<LiveStreamData[]> {
     return this.http.get<LiveStreamResponse[]>(this.liveUrl).pipe(map(streams => streams.map(toLiveStreamData)));
   }
@@ -23,7 +22,6 @@ export class LiveApiService {
       .pipe(map(toLiveStreamData));
   }
 
-  /** The signed-in creator's live broadcast, or null when offline (HTTP 204). */
   getMyCurrentStream(): Observable<LiveStreamData | null> {
     return this.http.get<LiveStreamResponse | null>(`${this.creatorLiveUrl}/current`)
       .pipe(map(stream => stream ? toLiveStreamData(stream) : null));
@@ -33,23 +31,19 @@ export class LiveApiService {
     return this.http.post<LiveStreamResponse>(this.creatorLiveUrl, request).pipe(map(toLiveStreamData));
   }
 
-  /** Viewer: sends the WebRTC offer for a camera broadcast (requires a session). */
   requestViewing(streamId: string, offer: string): Observable<LiveViewerSession> {
     return this.http.post<LiveViewerSession>(`${this.liveUrl}/${encodeURIComponent(streamId)}/viewers`, { sdp: offer });
   }
 
-  /** Viewer: polls for the creator's answer. */
   getViewerSession(streamId: string, sessionId: string): Observable<LiveViewerSession> {
     return this.http.get<LiveViewerSession>(
       `${this.liveUrl}/${encodeURIComponent(streamId)}/viewers/${encodeURIComponent(sessionId)}`);
   }
 
-  /** Creator: viewers waiting for an answer. Polling it also tells Kino the camera is still on. */
   getPendingViewers(streamId: string): Observable<PendingViewer[]> {
     return this.http.get<PendingViewer[]>(`${this.creatorLiveUrl}/${encodeURIComponent(streamId)}/viewers/pending`);
   }
 
-  /** Creator: sends the WebRTC answer for one viewer. */
   answerViewer(streamId: string, sessionId: string, answer: string): Observable<void> {
     return this.http.post<void>(
       `${this.creatorLiveUrl}/${encodeURIComponent(streamId)}/viewers/${encodeURIComponent(sessionId)}/answer`,

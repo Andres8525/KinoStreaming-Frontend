@@ -8,17 +8,8 @@ export const ANSWER_POLL_MS = 1_000;
 export const ANSWER_ATTEMPTS = 25;
 export const RETRY_DELAY_MS = 5_000;
 
-/**
- * connecting: negotiating · connected: receiving video · waiting: the creator's camera is not connected
- * right now (Kino keeps retrying) · failed: the connection could not be established (Kino keeps retrying).
- */
 export type CameraViewerState = 'connecting' | 'connected' | 'waiting' | 'failed';
 
-/**
- * Viewer side of a camera broadcast: sends a receive-only WebRTC offer through Kino, waits for the creator's
- * browser to answer and hands the incoming camera stream to `onStream`. Reconnects automatically when the
- * connection drops or the creator is temporarily offline.
- */
 export class CameraViewer {
   readonly state = signal<CameraViewerState>('connecting');
 

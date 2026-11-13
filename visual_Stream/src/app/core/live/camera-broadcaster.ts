@@ -4,14 +4,8 @@ import { LiveApiService } from './live-api.service';
 import { PendingViewer } from './live.models';
 import { createPeerConnection, PeerFactory, waitForIceGathering } from './webrtc';
 
-/** How often the creator's browser asks Kino for new viewers (also the heartbeat that keeps the broadcast listed). */
 export const BROADCAST_POLL_MS = 2_000;
 
-/**
- * Creator side of a camera broadcast. Polls Kino for viewers that want to watch, answers each one with a
- * WebRTC connection that carries the camera and microphone tracks, and keeps count of connected viewers.
- * The video goes directly from this browser to each viewer, so the tab must stay open while live.
- */
 export class CameraBroadcaster {
   readonly viewerCount = signal(0);
   readonly connectionProblem = signal(false);
@@ -45,7 +39,6 @@ export class CameraBroadcaster {
     this.viewerCount.set(0);
   }
 
-  /** One polling round; exposed for tests. */
   async poll(): Promise<void> {
     if (!this.running) {
       return;

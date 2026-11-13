@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { unauthorizedInterceptor } from './core/auth/unauthorized.interceptor';
+import { retryInterceptor } from './core/api/retry.interceptor';
 import { KinoTitleStrategy } from './core/routing/kino-title.strategy';
 
 export const appConfig: ApplicationConfig = {
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     { provide: TitleStrategy, useClass: KinoTitleStrategy },
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor, unauthorizedInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, retryInterceptor, unauthorizedInterceptor])),
     provideClientHydration(withEventReplay())
   ]
 };

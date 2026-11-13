@@ -1,6 +1,6 @@
 // Production build configuration (ng build).
-// Change apiBaseUrl to the public URL of the deployed backend before publishing.
+// Points to the Kino backend deployed on Render.
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://localhost:8081/api'
+  apiBaseUrl: 'https://kino-backend-alq2.onrender.com/api'
 };

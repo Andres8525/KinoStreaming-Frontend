@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GoLivePanelComponent } from '../../components/go-live-panel/go-live-panel.component';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { normalizeText } from '../../core/text/normalize-text';
@@ -27,6 +27,7 @@ export class CreatorStudioComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
 
   readonly activeTab = signal<StudioTab>('upload');
   readonly videoTitle = signal('');
@@ -73,6 +74,12 @@ export class CreatorStudioComponent implements OnInit {
 
   setTab(tab: StudioTab): void {
     this.activeTab.set(tab);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    }).catch(() => false);
   }
 
   addTag(): void {

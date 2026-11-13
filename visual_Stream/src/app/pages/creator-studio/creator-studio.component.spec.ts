@@ -54,6 +54,17 @@ describe('CreatorStudioComponent', () => {
     expect(harness.routeNativeElement?.querySelector('app-go-live-panel')).not.toBeNull();
   });
 
+  it('keeps the selected tab in the URL', async () => {
+    TestBed.inject(Router).resetConfig([{ path: '', component: CreatorStudioComponent }]);
+    const harness = await RouterTestingHarness.create();
+    const component = await harness.navigateByUrl('/', CreatorStudioComponent);
+
+    component.setTab('analytics');
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/?tab=analytics');
+  });
+
   it('deduplicates category tags without case or accent differences', () => {
     const fixture = TestBed.createComponent(CreatorStudioComponent);
     fixture.detectChanges();

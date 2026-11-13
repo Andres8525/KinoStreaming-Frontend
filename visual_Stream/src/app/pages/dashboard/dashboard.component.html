@@ -54,7 +54,8 @@
   } @else {
     <section class="hero-section dashboard-state">
       <h1>Tu próxima historia empieza aquí</h1>
-      <p>Aún no hay videos publicados. Vuelve pronto para descubrir nuevas historias.</p>
+      <p>Aún no hay videos publicados. Sé el primero en compartir tu historia o empieza a transmitir en vivo.</p>
+      <a routerLink="/creator-studio" class="btn-primary">Publicar un video</a>
     </section>
   }
 
@@ -76,6 +77,32 @@
       </div>
     </div>
   </section>
+
+  @if (activeCategoryInfo(); as category) {
+    <section class="content-section category-showcase" aria-live="polite">
+      <div class="section-container mx-auto w-full max-w-350 px-6">
+        <div class="section-header">
+          <div class="section-title-group">
+            <h2 class="section-title">{{ category.name }}</h2>
+            <span class="trend-badge">{{ categoryVideos().length }} {{ categoryVideos().length === 1 ? 'video' : 'videos' }}</span>
+          </div>
+          <p class="section-subtitle category-description">{{ category.description }}</p>
+        </div>
+        @if (categoryVideos().length) {
+          <div class="video-carousel category-grid">
+            @for (video of categoryVideos(); track video.id; let i = $index) {
+              <app-video-card [video]="video" [animationDelay]="i * 80" class="carousel-item"/>
+            }
+          </div>
+        } @else if (!isLoading()) {
+          <div class="category-empty">
+            <p>Todavía no hay videos en {{ category.name }}. En cuanto alguien publique uno, aparecerá aquí.</p>
+            <a routerLink="/creator-studio" class="btn-primary">Publicar el primero</a>
+          </div>
+        }
+      </div>
+    </section>
+  }
 
   @if (searchTerm()) {
     <section class="content-section">
@@ -154,12 +181,11 @@
       <div class="cta-card">
         <div class="cta-content">
           <h2 class="cta-title">¿Tienes una historia que contar?</h2>
-          @if (isCreator()) {
-            <p class="cta-description">Publica tus videos con una URL de streaming y sigue sus reproducciones desde Creator Studio.</p>
-            <a routerLink="/creator-studio" class="btn-primary btn-lg">Abrir Creator Studio</a>
-          } @else {
-            <p class="cta-description">Las cuentas de creador pueden publicar videos y ver sus analíticas. Pide a un administrador de Kino que active el rol de creador en tu cuenta.</p>
-          }
+          <p class="cta-description">Publica tus videos o abre tu cámara y empieza a transmitir en vivo: cualquier persona con cuenta en Kino podrá verte.</p>
+          <div class="cta-actions">
+            <a routerLink="/creator-studio" class="btn-primary btn-lg">Publicar un video</a>
+            <a routerLink="/creator-studio" [queryParams]="{ tab: 'live' }" class="btn-secondary btn-lg">Transmitir en vivo</a>
+          </div>
         </div>
         <div class="cta-decoration" aria-hidden="true">
           <div class="cta-circle cta-circle-1"></div>

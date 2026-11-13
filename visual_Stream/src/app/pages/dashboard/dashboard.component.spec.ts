@@ -4,7 +4,6 @@ import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { AiInsightsService } from '../../core/ai/ai-insights.service';
 import { TrendingInsights } from '../../core/ai/ai-insights.models';
-import { AuthService } from '../../core/auth/auth.service';
 import { LiveApiService } from '../../core/live/live-api.service';
 import { LiveStreamData } from '../../core/live/live.models';
 import { VideoApiService } from '../../core/videos/video-api.service';
@@ -20,7 +19,6 @@ describe('DashboardComponent', () => {
     getRecommendations: ReturnType<typeof vi.fn>;
   };
   let queryParams: Subject<ParamMap>;
-  let isCreator = false;
   let liveApi: { getLiveNow: ReturnType<typeof vi.fn> };
   let aiInsights: { getTrendingInsights: ReturnType<typeof vi.fn> };
 
@@ -45,7 +43,6 @@ describe('DashboardComponent', () => {
           provide: VideoApiService,
           useValue: videoApi
         },
-        { provide: AuthService, useValue: { isCreator: () => isCreator } },
         { provide: LiveApiService, useValue: liveApi },
         { provide: AiInsightsService, useValue: aiInsights }
       ]
@@ -98,17 +95,46 @@ describe('DashboardComponent', () => {
     expect(component.searchTerm()).toBe('');
   });
 
-  it('links creators to Creator Studio and explains the role to viewers', () => {
-    isCreator = true;
-    const creatorFixture = TestBed.createComponent(DashboardComponent);
-    creatorFixture.detectChanges();
-    expect(creatorFixture.nativeElement.querySelector('.cta-card a[href="/creator-studio"]')).not.toBeNull();
+  it('invites every account to publish videos and go live', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const links = [...fixture.nativeElement.querySelectorAll('.cta-card a')] as HTMLAnchorElement[];
 
-    isCreator = false;
-    const viewerFixture = TestBed.createComponent(DashboardComponent);
-    viewerFixture.detectChanges();
-    expect(viewerFixture.nativeElement.querySelector('.cta-card a[href="/creator-studio"]')).toBeNull();
-    expect(viewerFixture.nativeElement.querySelector('.cta-card').textContent).toContain('rol de creador');
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/creator-studio', '/creator-studio?tab=live']);
+    expect(fixture.nativeElement.querySelector('.cta-card').textContent).toContain('Transmitir en vivo');
+  });
+
+  it('describes the selected category and lists its videos', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.setCategory('Música');
+    fixture.detectChanges();
+    const showcase = fixture.nativeElement.querySelector('.category-showcase') as HTMLElement;
+
+    expect(showcase.textContent).toContain('Aquí podrás encontrar conciertos');
+    expect(showcase.querySelector('.category-grid app-video-card')).not.toBeNull();
+    expect(fixture.componentInstance.categoryVideos().map(video => video.id)).toEqual(['music']);
+  });
+
+  it('invites creators to publish the first video of an empty category', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.setCategory('Documentales');
+    fixture.detectChanges();
+    const showcase = fixture.nativeElement.querySelector('.category-showcase') as HTMLElement;
+
+    expect(showcase.textContent).toContain('Aquí podrás encontrar documentales');
+    expect(showcase.textContent).toContain('Todavía no hay videos en Documentales');
+    expect(showcase.querySelector('a[href="/creator-studio"]')).not.toBeNull();
+  });
+
+  it('shows no category section for "Todo"', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.category-showcase')).toBeNull();
   });
 
   it('shows a notice after a creator-only redirect', () => {
@@ -197,6 +223,7 @@ function createLiveStream(): LiveStreamData {
     title: 'Ensayo abierto',
     description: '',
     category: 'Música',
+    sourceType: 'HLS',
     playbackUrl: 'https://live.example.com/stream.m3u8',
     thumbnail: '',
     isLive: true,

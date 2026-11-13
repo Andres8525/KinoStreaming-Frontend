@@ -10,9 +10,9 @@ import { AiInsightsService } from '../../core/ai/ai-insights.service';
 import { TrendingInsights } from '../../core/ai/ai-insights.models';
 import { LiveApiService } from '../../core/live/live-api.service';
 import { LiveStreamData } from '../../core/live/live.models';
-import { AuthService } from '../../core/auth/auth.service';
 import { normalizeText } from '../../core/text/normalize-text';
 import { VideoApiService } from '../../core/videos/video-api.service';
+import { ALL_CATEGORIES, findCategory, matchesCategory, VIDEO_CATEGORIES } from '../../core/videos/video-categories';
 import { VideoCardData } from '../../core/videos/video.models';
 
 @Component({
@@ -28,14 +28,12 @@ export class DashboardComponent implements OnInit {
   private readonly aiInsightsApi = inject(AiInsightsService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly authService = inject(AuthService);
   private pendingLoads = 0;
 
-  readonly categories = signal([
-    'Todo', 'Cortometrajes', 'Documentales', 'Animación', 'Música',
-    'Videoclips', 'Experimental', 'Tutoriales'
-  ]);
-  readonly activeCategory = signal('Todo');
+  readonly categories = signal([ALL_CATEGORIES, ...VIDEO_CATEGORIES.map(category => category.name)]);
+  readonly activeCategory = signal(ALL_CATEGORIES);
+  /** The selected category with its description; null for "Todo". */
+  readonly activeCategoryInfo = computed(() => findCategory(this.activeCategory()) ?? null);
   readonly recommendations = signal<VideoCardData[]>([]);
   readonly trending = signal<VideoCardData[]>([]);
   readonly catalog = signal<VideoCardData[]>([]);
@@ -45,10 +43,11 @@ export class DashboardComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly errors = signal<string[]>([]);
   readonly notice = signal('');
-  readonly isCreator = signal(false);
 
   readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
   readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
+  /** Every published video of the selected category, newest catalog order. */
+  readonly categoryVideos = computed(() => this.filterVideos(this.catalog()));
   readonly searchResults = computed(() => {
     const query = normalizeText(this.searchTerm());
     return this.filterVideos(this.catalog()).filter(video =>
@@ -60,7 +59,6 @@ export class DashboardComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.isCreator.set(this.authService.isCreator());
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
@@ -132,25 +130,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private filterVideos(videos: VideoCardData[]): VideoCardData[] {
-    const aliases: Record<string, string[]> = {
-      Cortometrajes: ['cortometraje', 'cortometrajes'],
-      Documentales: ['documental', 'documentales'],
-      Animación: ['animación', 'animacion'],
-      Música: ['música', 'musica'],
-      Videoclips: ['videoclip', 'videoclips'],
-      Experimental: ['experimental'],
-      Tutoriales: ['tutorial', 'tutoriales']
-    };
     const category = this.activeCategory();
-    if (category === 'Todo') {
-      return videos;
-    }
-
-    const acceptedTags = aliases[category] ?? [category.toLowerCase()];
-    return videos.filter(video =>
-      video.tags.some(tag =>
-        acceptedTags.some(acceptedTag => normalizeText(acceptedTag) === normalizeText(tag))
-      )
-    );
+    return videos.filter(video => matchesCategory(video.tags, category));
   }
 }

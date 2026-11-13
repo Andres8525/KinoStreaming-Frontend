@@ -1,7 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
 export const CONNECTION_ERROR_MESSAGE =
-  'No se pudo conectar con Kino. Comprueba tu conexión o inténtalo de nuevo en unos segundos.';
+  'No se pudo conectar con el servidor de Kino. Si no se usaba desde hace un rato puede tardar hasta un minuto '
+  + 'en despertar: inténtalo de nuevo en unos segundos.';
+
+/** Status codes a hosting platform returns while the backend is starting or briefly unavailable. */
+const TRANSIENT_STATUSES = new Set([0, 502, 503, 504]);
+
+/**
+ * True when the request never got a usable answer from the API: network or CORS failure (status 0)
+ * or a gateway error while the server wakes up. These are worth retrying.
+ */
+export function isConnectionError(error: unknown): boolean {
+  return error instanceof HttpErrorResponse && TRANSIENT_STATUSES.has(error.status);
+}
 
 /**
  * Turns an HTTP error from the Kino API into a message that can be shown to the user.
@@ -10,7 +22,7 @@ export const CONNECTION_ERROR_MESSAGE =
  */
 export function apiErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) {
+    if (isConnectionError(error)) {
       return CONNECTION_ERROR_MESSAGE;
     }
     const body: unknown = error.error;

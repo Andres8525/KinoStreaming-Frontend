@@ -48,9 +48,15 @@ The app is deployed as static files: `login` and `register` are prerendered, and
 
 Preview deployments get a different URL each time, so they can only call the API if that exact origin is also allowed in CORS.
 
+## Troubleshooting
+
+- **"No se pudo conectar con el servidor de Kino" on login or register**: the browser could not reach the API. Open `https://kino-backend-alq2.onrender.com/api/health`: `cors.origins` must contain the exact frontend origin (for example `https://kino-streamingg-frontend.vercel.app`). If it is missing, fix `CORS_ALLOWED_ORIGINS` in Render; the backend also accepts bare domains and trailing slashes.
+- **First request is slow**: the Render free plan sleeps after 15 minutes. The app pings `/api/health` as soon as it opens, retries read requests (GET) on network/502/503/504 errors and shows a "Conectando con el servidor…" notice on the login and registration forms. Writes such as creating an account are never retried automatically.
+- **Pages without styles**: `.postcssrc.json` must exist so Tailwind generates its utility classes.
+
 ## Features
 
-- **Accounts**: registration and login with JWT. The session lives in `sessionStorage`; expired tokens are discarded, and if the API rejects the session (401) the user is signed out and sent back to login, returning to the same page afterwards.
+- **Accounts**: registration and login with JWT; signed-in users are sent from `/login` and `/register` to the dashboard, and backend field errors are shown next to each field. The session lives in `sessionStorage`; expired tokens are discarded, and if the API rejects the session (401) the user is signed out and sent back to login, returning to the same page afterwards.
 - **Dashboard**: personalized recommendations, trending videos and the full catalog, with accent-insensitive search (`?q=`) and category filters. Video cards show whether access is free or paid.
 - **Player**: streams each video from its `videoUrl`, records one view per session and shows the video title in the browser tab.
 - **Creator Studio** (only `CREATOR` accounts): publish videos with tags, access price and suggested donation, see analytics, and delete published videos. Viewers do not see the link and are redirected with an explanation.

@@ -24,6 +24,10 @@ Every service builds its URLs from `API_BASE_URL` (`src/app/core/api/api.constan
 
 The Render free plan sleeps after 15 minutes without traffic, so the first request afterwards can take about a minute.
 
+## Styles
+
+Global styles use Tailwind CSS v4 (`@import "tailwindcss"` in `src/styles.css`). The Angular builder runs it through PostCSS using `.postcssrc.json`; without that file no Tailwind utility classes are generated and pages render unstyled.
+
 ## Scripts
 
 ```bash

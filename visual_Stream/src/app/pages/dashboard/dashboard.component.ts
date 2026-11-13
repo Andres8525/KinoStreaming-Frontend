@@ -32,6 +32,7 @@ export class DashboardComponent implements OnInit {
   readonly searchTerm = signal('');
   readonly isLoading = signal(true);
   readonly errors = signal<string[]>([]);
+  readonly notice = signal('');
 
   readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
   readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
@@ -48,7 +49,12 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(params => this.searchTerm.set(params.get('q')?.trim() ?? ''));
+      .subscribe(params => {
+        this.searchTerm.set(params.get('q')?.trim() ?? '');
+        this.notice.set(params.get('notice') === 'creator-only'
+          ? 'Creator Studio está disponible solo para cuentas de creador.'
+          : '');
+      });
     this.loadContent();
   }
 

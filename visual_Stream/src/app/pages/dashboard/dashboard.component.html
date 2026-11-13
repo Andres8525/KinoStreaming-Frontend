@@ -1,4 +1,7 @@
 <div class="dashboard">
+  @if (notice()) {
+    <div class="dashboard-notice" role="status">{{ notice() }}</div>
+  }
   @if (errors().length) {
     <div class="dashboard-alert" role="alert">
       @for (message of errors(); track message) {

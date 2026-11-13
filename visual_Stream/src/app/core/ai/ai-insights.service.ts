@@ -5,7 +5,6 @@ import { API_BASE_URL } from '../api/api.constants';
 import { toVideoCardData } from '../videos/video-api.service';
 import { TrendingInsights, TrendingInsightsResponse } from './ai-insights.models';
 
-/** Client for the "Kino IA" trending analyzer. */
 @Injectable({ providedIn: 'root' })
 export class AiInsightsService {
   private readonly http = inject(HttpClient);

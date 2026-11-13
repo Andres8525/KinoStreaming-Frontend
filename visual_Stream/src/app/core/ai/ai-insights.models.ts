@@ -1,6 +1,5 @@
 import { VideoCardData, VideoResponse } from '../videos/video.models';
 
-/** "ai" when the summary was written by the AI provider, "kino-analytics" when computed by Kino. */
 export type InsightsSource = 'ai' | 'kino-analytics';
 
 export interface CategoryInsight {

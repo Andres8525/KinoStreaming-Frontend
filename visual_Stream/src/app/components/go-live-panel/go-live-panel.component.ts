@@ -12,13 +12,8 @@ import { cameraErrorMessage, supportsWebRtc } from '../../core/live/webrtc';
 
 const HTTP_URL = /^https?:\/\/\S+$/i;
 
-/** camera: from this browser over WebRTC · hls: from OBS through an external media service. */
 export type GoLiveMode = 'camera' | 'hls';
 
-/**
- * Creator Studio "Transmitir" tab. By default the creator opens the camera and goes live from the browser;
- * Kino connects every viewer directly to this tab. Streaming from OBS with an HLS URL is still available.
- */
 @Component({
   selector: 'app-go-live-panel',
   standalone: true,
@@ -42,7 +37,6 @@ export class GoLivePanelComponent implements OnInit {
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
-  /** The local camera and microphone, shown in the preview and sent to viewers. */
   readonly camera = signal<MediaStream | null>(null);
   readonly isOpeningCamera = signal(false);
   readonly cameraError = signal('');
@@ -83,7 +77,6 @@ export class GoLivePanelComponent implements OnInit {
     });
   }
 
-  /** Viewers watch directly from this tab: warn before closing it while live from the camera. */
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.broadcaster()) {
@@ -177,7 +170,6 @@ export class GoLivePanelComponent implements OnInit {
     });
   }
 
-  /** After reloading the page during a camera broadcast: turn the camera back on and accept viewers again. */
   async resumeCamera(): Promise<void> {
     const stream = this.currentStream();
     if (stream && await this.openCamera()) {

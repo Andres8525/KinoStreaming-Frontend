@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { signal } from '@angular/core';
 import { ServerState, ServerStatusService } from '../../core/api/server-status.service';
 import { AuthService } from '../../core/auth/auth.service';
@@ -77,5 +77,29 @@ describe('LoginComponent', () => {
     const fixture = await setup({ expired: '1' });
 
     expect(fixture.nativeElement.querySelector('[role=status]')?.textContent).toContain('Tu sesión ha caducado');
+  });
+
+  it('explains the wait while a sleeping server wakes up', async () => {
+    const fixture = await setup();
+    serverState.set('waking');
+    login.mockReturnValue(new Subject());
+    fixture.componentInstance.form.setValue({ email: 'viewer@example.com', password: 'secret-123' });
+
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role=status]')?.textContent).toContain('puede tardar hasta un minuto');
+    serverState.set('online');
+  });
+
+  it('does not show the wake-up notice when the server is online', async () => {
+    const fixture = await setup();
+    login.mockReturnValue(new Subject());
+    fixture.componentInstance.form.setValue({ email: 'viewer@example.com', password: 'secret-123' });
+
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('puede tardar hasta un minuto');
   });
 });

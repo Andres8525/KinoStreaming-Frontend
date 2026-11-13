@@ -51,4 +51,35 @@ describe('ServerStatusService', () => {
     httpTesting.expectOne(`${API_BASE_URL}/health`).flush({ status: 'UP' });
     expect(service.state()).toBe('online');
   });
+
+  describe('diagnose', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('reports blocked when the server answers but not to this address (CORS)', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null));
+      const message = service.connectionErrorMessage();
+      httpTesting.expectOne(`${API_BASE_URL}/health`).error(new ProgressEvent('error'));
+
+      expect(await message).toContain('no acepta peticiones desde');
+      expect(service.state()).toBe('blocked');
+      expect(fetchSpy).toHaveBeenCalledWith(`${API_BASE_URL}/health`, expect.objectContaining({ mode: 'no-cors' }));
+    });
+
+    it('reports offline when the server does not answer at all', async () => {
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
+      const state = service.diagnose();
+      httpTesting.expectOne(`${API_BASE_URL}/health`).error(new ProgressEvent('error'));
+
+      expect(await state).toBe('offline');
+    });
+
+    it('reports online without the extra request when the health check succeeds', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+      const state = service.diagnose();
+      httpTesting.expectOne(`${API_BASE_URL}/health`).flush({ status: 'UP' });
+
+      expect(await state).toBe('online');
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+  });
 });

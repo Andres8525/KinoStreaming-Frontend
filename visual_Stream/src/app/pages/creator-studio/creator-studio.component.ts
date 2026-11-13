@@ -1,8 +1,8 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { apiErrorMessage } from '../../core/api/api-error';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
 
@@ -178,18 +178,6 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
-function apiErrorMessage(error: unknown, fallback: string): string {
-  if (
-    error instanceof HttpErrorResponse &&
-    typeof error.error === 'object' &&
-    error.error !== null &&
-    'message' in error.error &&
-    typeof error.error.message === 'string'
-  ) {
-    return error.error.message;
-  }
-  return fallback;
-}
 
 function normalizeTag(tag: string): string {
   return tag.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');

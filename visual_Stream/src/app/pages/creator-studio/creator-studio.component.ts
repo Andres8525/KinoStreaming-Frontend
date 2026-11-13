@@ -33,6 +33,9 @@ export class CreatorStudioComponent implements OnInit {
   readonly formMessage = signal('');
   readonly pageError = signal('');
   readonly videos = signal<VideoCardData[]>([]);
+  readonly deletingVideoId = signal<string | null>(null);
+  readonly listMessage = signal('');
+  readonly listError = signal('');
   readonly analytics = signal<CreatorAnalyticsResponse>({
     videoCount: 0,
     totalViews: 0,
@@ -145,6 +148,32 @@ export class CreatorStudioComponent implements OnInit {
           'No se pudo publicar el video. Revisa tu conexión y tus permisos de creador.'
         ));
         this.isPublishing.set(false);
+      }
+    });
+  }
+
+  deleteVideo(video: VideoCardData): void {
+    if (this.deletingVideoId()) {
+      return;
+    }
+    if (typeof window !== 'undefined'
+      && !window.confirm(`¿Eliminar “${video.title}”? Se borrarán también sus reproducciones registradas.`)) {
+      return;
+    }
+
+    this.deletingVideoId.set(video.id);
+    this.listMessage.set('');
+    this.listError.set('');
+    this.videoApi.deleteVideo(video.id).subscribe({
+      next: () => {
+        this.videos.update(videos => videos.filter(item => item.id !== video.id));
+        this.listMessage.set(`“${video.title}” se eliminó.`);
+        this.deletingVideoId.set(null);
+        this.loadAnalytics();
+      },
+      error: (error: unknown) => {
+        this.listError.set(apiErrorMessage(error, 'No se pudo eliminar el video. Inténtalo de nuevo.'));
+        this.deletingVideoId.set(null);
       }
     });
   }

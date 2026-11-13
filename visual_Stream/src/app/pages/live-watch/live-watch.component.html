@@ -1,0 +1,45 @@
+<main class="live-watch">
+  <div class="live-watch-container">
+    @if (isLoading()) {
+      <p class="live-state" aria-live="polite">Conectando con la transmisión…</p>
+    } @else if (errorMessage()) {
+      <div class="live-state" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <a routerLink="/" class="live-link">Volver al inicio</a>
+      </div>
+    } @else if (stream(); as live) {
+      <div class="live-player-frame">
+        @if (live.isLive) {
+          <video #player class="live-player" controls autoplay muted playsinline
+                 [attr.poster]="live.thumbnail || null" (error)="onPlaybackError()"
+                 [attr.aria-label]="'Transmisión en vivo: ' + live.title"></video>
+          <span class="live-badge">EN VIVO</span>
+        } @else {
+          <div class="live-ended" role="status">
+            <p class="live-ended-title">La transmisión ha finalizado</p>
+            <p>Gracias por acompañar a {{ live.creator }}.</p>
+            <a routerLink="/" class="live-link">Descubrir más en Kino</a>
+          </div>
+        }
+      </div>
+
+      @if (playbackMessage()) {
+        <p class="live-warning" role="alert">{{ playbackMessage() }}</p>
+      }
+
+      <section class="live-details">
+        <span class="live-avatar" aria-hidden="true">{{ live.creatorAvatar }}</span>
+        <div>
+          <h1 class="live-title">{{ live.title }}</h1>
+          <p class="live-meta">
+            <strong>{{ live.creator }}</strong> · {{ live.category }} ·
+            {{ live.isLive ? 'En vivo desde ' + live.startedAgo : 'Transmitió ' + live.startedAgo }}
+          </p>
+          @if (live.description) {
+            <p class="live-description">{{ live.description }}</p>
+          }
+        </div>
+      </section>
+    }
+  </div>
+</main>

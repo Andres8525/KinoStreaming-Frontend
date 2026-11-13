@@ -1,12 +1,14 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, distinctUntilChanged, filter, map, of, switchMap, tap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
 import { formatCount } from '../../core/videos/video-format';
+import { APP_NAME } from '../../core/routing/kino-title.strategy';
 
 @Component({
   selector: 'app-video-player',
@@ -21,6 +23,7 @@ export class VideoPlayerComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly title = inject(Title);
 
   readonly video = signal<VideoCardData | null>(null);
   readonly relatedVideos = signal<VideoCardData[]>([]);
@@ -61,6 +64,7 @@ export class VideoPlayerComponent implements OnInit {
       }
 
       this.video.set(result.video);
+      this.title.setTitle(`${result.video.title} · ${APP_NAME}`);
       this.relatedVideos.set(result.relatedVideos);
       this.isLoading.set(false);
     });

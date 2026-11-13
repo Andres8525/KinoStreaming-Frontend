@@ -4,21 +4,12 @@ import { catchError, finalize, firstValueFrom, map, Observable, of, shareReplay,
 import { blockedOriginMessage, CONNECTION_ERROR_MESSAGE, localBackendMessage } from './api-error';
 import { API_BASE_URL } from './api.constants';
 
-/**
- * unknown: not checked yet · waking: waiting for the first answer · online / offline: last result ·
- * blocked: the server answers, but not to this page's address (CORS).
- */
 export type ServerState = 'unknown' | 'waking' | 'online' | 'offline' | 'blocked';
 
-/** A sleeping free-tier backend (Render) can take close to a minute to answer its first request. */
 export const WAKE_UP_TIMEOUT_MS = 90_000;
 
 const LOCAL_API = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//;
 
-/**
- * Wakes the backend up as soon as the app opens, so that by the time the user submits the login or
- * registration form the server is already running, and exposes its state to show helpful messages.
- */
 @Injectable({ providedIn: 'root' })
 export class ServerStatusService {
   private readonly http = inject(HttpClient);
@@ -26,7 +17,6 @@ export class ServerStatusService {
 
   readonly state = signal<ServerState>('unknown');
 
-  /** Pings /api/health once; concurrent callers share the same request. Emits true when online. */
   wakeUp(): Observable<boolean> {
     if (this.state() === 'online') {
       return of(true);
@@ -45,11 +35,6 @@ export class ServerStatusService {
     return this.pending;
   }
 
-  /**
-   * Finds out why a request failed without an answer. A browser reports a CORS rejection exactly like a
-   * server that is down (status 0), so after a failed health check the server is contacted once more in
-   * `no-cors` mode: that request cannot be read, but it succeeds whenever the server answered.
-   */
   async diagnose(): Promise<ServerState> {
     if (await firstValueFrom(this.wakeUp())) {
       return 'online';
@@ -60,7 +45,6 @@ export class ServerStatusService {
     return this.state();
   }
 
-  /** The message to show after a connection error (`isConnectionError`), based on `diagnose()`. */
   async connectionErrorMessage(): Promise<string> {
     const state = await this.diagnose();
     if (state === 'blocked') {

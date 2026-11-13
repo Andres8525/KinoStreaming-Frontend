@@ -1,11 +1,8 @@
 import { normalizeText } from '../text/normalize-text';
 
-/** A browsing category of the home page. Videos belong to it when one of their tags matches an alias. */
 export interface VideoCategory {
   name: string;
-  /** Tags that place a video in this category (the Creator Studio category is the first tag). */
   aliases: string[];
-  /** Shown above the category's videos: what viewers will find there. */
   description: string;
 }
 
@@ -53,7 +50,6 @@ export function findCategory(name: string): VideoCategory | undefined {
   return VIDEO_CATEGORIES.find(category => category.name === name);
 }
 
-/** True when one of the tags places the video in the category (accents and letter case are ignored). */
 export function matchesCategory(tags: readonly string[], categoryName: string): boolean {
   if (categoryName === ALL_CATEGORIES) {
     return true;

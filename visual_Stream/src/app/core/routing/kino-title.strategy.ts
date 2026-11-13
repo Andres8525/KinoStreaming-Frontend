@@ -4,7 +4,6 @@ import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 
 export const APP_NAME = 'Kino';
 
-/** Formats browser tab titles as "<page> · Kino", or just "Kino" when a route has no title. */
 @Injectable({ providedIn: 'root' })
 export class KinoTitleStrategy extends TitleStrategy {
   private readonly title = inject(Title);

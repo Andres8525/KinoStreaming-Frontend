@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
 import { CreatorStudioComponent } from './creator-studio.component';
@@ -8,10 +8,16 @@ import { CreatorStudioComponent } from './creator-studio.component';
 describe('CreatorStudioComponent', () => {
   let publishedRequests: CreateVideoRequest[];
   let publishResponse: Observable<VideoCardData>;
+  let creatorVideos: VideoCardData[];
+  let deleteResponse: Observable<void>;
+  let deletedIds: string[];
 
   beforeEach(async () => {
     publishedRequests = [];
     publishResponse = of(createVideo());
+    creatorVideos = [];
+    deleteResponse = of(undefined);
+    deletedIds = [];
     await TestBed.configureTestingModule({
       imports: [CreatorStudioComponent],
       providers: [
@@ -19,7 +25,11 @@ describe('CreatorStudioComponent', () => {
         {
           provide: VideoApiService,
           useValue: {
-            getCreatorVideos: () => of([]),
+            getCreatorVideos: () => of(creatorVideos),
+            deleteVideo: (videoId: string) => {
+              deletedIds.push(videoId);
+              return deleteResponse;
+            },
             getCreatorAnalytics: () => of(emptyAnalytics()),
             publishVideo: (request: CreateVideoRequest) => {
               publishedRequests.push(request);
@@ -63,6 +73,46 @@ describe('CreatorStudioComponent', () => {
     expect(publishedRequests).toHaveLength(1);
     publishing.next(createVideo());
     publishing.complete();
+  });
+
+  it('deletes a video after confirmation and removes it from the list', () => {
+    creatorVideos = [createVideo()];
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const fixture = TestBed.createComponent(CreatorStudioComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.deleteVideo(createVideo());
+    fixture.detectChanges();
+
+    expect(deletedIds).toEqual(['published']);
+    expect(fixture.componentInstance.videos()).toEqual([]);
+    expect(fixture.componentInstance.listMessage()).toContain('se eliminó');
+  });
+
+  it('keeps the video when the deletion is not confirmed', () => {
+    creatorVideos = [createVideo()];
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const fixture = TestBed.createComponent(CreatorStudioComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.deleteVideo(createVideo());
+
+    expect(deletedIds).toEqual([]);
+    expect(fixture.componentInstance.videos().length).toBe(1);
+  });
+
+  it('shows an error and keeps the video when deletion fails', () => {
+    creatorVideos = [createVideo()];
+    deleteResponse = throwError(() => new Error('network'));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const fixture = TestBed.createComponent(CreatorStudioComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.deleteVideo(createVideo());
+
+    expect(fixture.componentInstance.videos().length).toBe(1);
+    expect(fixture.componentInstance.listError()).toBe('No se pudo eliminar el video. Inténtalo de nuevo.');
+    expect(fixture.componentInstance.deletingVideoId()).toBeNull();
   });
 });
 

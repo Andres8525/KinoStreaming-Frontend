@@ -1,0 +1,32 @@
+<section class="live-now" aria-labelledby="live-now-title">
+  <div class="live-container">
+    <div class="live-header">
+      <h2 id="live-now-title" class="live-title">
+        <span class="live-dot" aria-hidden="true"></span>
+        En vivo ahora
+      </h2>
+      <span class="live-count">{{ streams().length }} {{ streams().length === 1 ? 'canal' : 'canales' }}</span>
+    </div>
+
+    <div class="live-grid">
+      @for (stream of streams(); track stream.id) {
+        <a class="live-card" [routerLink]="['/live', stream.id]" [attr.aria-label]="'Ver en vivo: ' + stream.title + ' de ' + stream.creator">
+          <div class="live-thumb">
+            @if (stream.thumbnail) {
+              <img [src]="stream.thumbnail" alt="" loading="lazy"/>
+            }
+            <span class="live-badge">EN VIVO</span>
+            <span class="live-category">{{ stream.category }}</span>
+          </div>
+          <div class="live-info">
+            <span class="live-avatar" aria-hidden="true">{{ stream.creatorAvatar }}</span>
+            <div class="live-text">
+              <h3 class="live-stream-title">{{ stream.title }}</h3>
+              <p class="live-meta">{{ stream.creator }} · desde {{ stream.startedAgo }}</p>
+            </div>
+          </div>
+        </a>
+      }
+    </div>
+  </div>
+</section>

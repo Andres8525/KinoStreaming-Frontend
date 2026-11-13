@@ -51,4 +51,32 @@ describe('RegisterComponent', () => {
     expect(fixture.componentInstance.errorMessage()).toBe('El correo ya está registrado');
     expect(fixture.componentInstance.submitting()).toBe(false);
   });
+
+  it('shows backend field errors under the matching field', () => {
+    const fixture = TestBed.createComponent(RegisterComponent);
+    register.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 400,
+      error: { message: 'Revisa los campos enviados', validationErrors: { email: 'Debe ser una dirección de correo válida' } }
+    })));
+    fixture.componentInstance.form.setValue({ displayName: 'Ana', email: 'ana@example.com', password: 'secure-password' });
+
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+
+    const emailField = (fixture.nativeElement as HTMLElement).querySelector('#email')!.parentElement!;
+    expect(emailField.textContent).toContain('Debe ser una dirección de correo válida');
+    expect(fixture.componentInstance.errorMessage()).toBe('Revisa los campos enviados');
+  });
+
+  it('clears previous backend field errors when submitting again', () => {
+    const fixture = TestBed.createComponent(RegisterComponent);
+    fixture.componentInstance.serverErrors.set({ email: 'antiguo error' });
+    register.mockReturnValue(of({}));
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    fixture.componentInstance.form.setValue({ displayName: 'Ana', email: 'ana@example.com', password: 'secure-password' });
+
+    fixture.componentInstance.submit();
+
+    expect(fixture.componentInstance.serverErrors()).toEqual({});
+  });
 });

@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ServerStatusService } from '../../core/api/server-status.service';
-import { apiErrorMessage, apiValidationErrors } from '../../core/api/api-error';
+import { apiErrorMessage, apiValidationErrors, isConnectionError } from '../../core/api/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -18,7 +18,8 @@ export class RegisterComponent {
 
   readonly submitting = signal(false);
   /** Lets the form explain a slow first request while a sleeping backend starts. */
-  readonly serverState = inject(ServerStatusService).state;
+  private readonly serverStatus = inject(ServerStatusService);
+  readonly serverState = this.serverStatus.state;
   readonly errorMessage = signal('');
   /** Field errors returned by the backend (400), keyed by form control name. */
   readonly serverErrors = signal<Record<string, string>>({});
@@ -43,6 +44,10 @@ export class RegisterComponent {
         this.errorMessage.set(apiErrorMessage(error, 'No se pudo crear la cuenta. Inténtalo de nuevo.'));
         this.serverErrors.set(apiValidationErrors(error));
         this.submitting.set(false);
+        if (isConnectionError(error)) {
+          // Replace the generic text with the actual cause: sleeping server, blocked address or local backend.
+          void this.serverStatus.connectionErrorMessage().then(message => this.errorMessage.set(message));
+        }
       },
       complete: () => this.submitting.set(false)
     });

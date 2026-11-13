@@ -11,14 +11,30 @@ const serverState = signal<ServerState>('online');
 
 describe('RegisterComponent', () => {
   let register: ReturnType<typeof vi.fn>;
+  let connectionErrorMessage: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     register = vi.fn();
+    connectionErrorMessage = vi.fn();
     await TestBed.configureTestingModule({
       imports: [RegisterComponent],
-      providers: [provideRouter([]), { provide: ServerStatusService, useValue: { state: serverState } },
+      providers: [provideRouter([]),
+        { provide: ServerStatusService, useValue: { state: serverState, connectionErrorMessage } },
         { provide: AuthService, useValue: { register } }]
     }).compileComponents();
+  });
+
+  it('explains a blocked address instead of asking to wait', async () => {
+    const fixture = TestBed.createComponent(RegisterComponent);
+    connectionErrorMessage.mockResolvedValue('El servidor de Kino está en línea, pero no acepta peticiones desde https://x');
+    register.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0, error: new ProgressEvent('error') })));
+    fixture.componentInstance.form.setValue({ displayName: 'Ana', email: 'ana@example.com', password: 'secret-123' });
+
+    fixture.componentInstance.submit();
+    await fixture.whenStable();
+
+    expect(connectionErrorMessage).toHaveBeenCalled();
+    expect(fixture.componentInstance.errorMessage()).toContain('no acepta peticiones desde');
   });
 
   it('requires a password of at least 8 characters', () => {

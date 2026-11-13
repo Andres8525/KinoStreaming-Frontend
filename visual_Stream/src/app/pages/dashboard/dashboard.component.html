@@ -146,8 +146,12 @@
       <div class="cta-card">
         <div class="cta-content">
           <h2 class="cta-title">¿Tienes una historia que contar?</h2>
-          <p class="cta-description">Publica tus videos con una URL de streaming y sigue sus reproducciones desde Creator Studio.</p>
-          <a routerLink="/creator-studio" class="btn-primary btn-lg">Abrir Creator Studio</a>
+          @if (isCreator()) {
+            <p class="cta-description">Publica tus videos con una URL de streaming y sigue sus reproducciones desde Creator Studio.</p>
+            <a routerLink="/creator-studio" class="btn-primary btn-lg">Abrir Creator Studio</a>
+          } @else {
+            <p class="cta-description">Las cuentas de creador pueden publicar videos y ver sus analíticas. Pide a un administrador de Kino que active el rol de creador en tu cuenta.</p>
+          }
         </div>
         <div class="cta-decoration" aria-hidden="true">
           <div class="cta-circle cta-circle-1"></div>

@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
+import { AuthService } from '../../core/auth/auth.service';
 import { normalizeText } from '../../core/text/normalize-text';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
@@ -19,6 +20,7 @@ export class DashboardComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly authService = inject(AuthService);
   private pendingLoads = 0;
 
   readonly categories = signal([
@@ -33,6 +35,7 @@ export class DashboardComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly errors = signal<string[]>([]);
   readonly notice = signal('');
+  readonly isCreator = signal(false);
 
   readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
   readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
@@ -47,6 +50,7 @@ export class DashboardComponent implements OnInit {
   );
 
   ngOnInit(): void {
+    this.isCreator.set(this.authService.isCreator());
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {

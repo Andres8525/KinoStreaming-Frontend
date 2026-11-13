@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, ParamMap, provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
+import { AuthService } from '../../core/auth/auth.service';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
 import { DashboardComponent } from './dashboard.component';
@@ -15,6 +16,7 @@ describe('DashboardComponent', () => {
     getRecommendations: ReturnType<typeof vi.fn>;
   };
   let queryParams: Subject<ParamMap>;
+  let isCreator = false;
 
   beforeEach(async () => {
     queryParams = new Subject<ParamMap>();
@@ -34,7 +36,8 @@ describe('DashboardComponent', () => {
         {
           provide: VideoApiService,
           useValue: videoApi
-        }
+        },
+        { provide: AuthService, useValue: { isCreator: () => isCreator } }
       ]
     }).compileComponents();
   });
@@ -83,6 +86,29 @@ describe('DashboardComponent', () => {
     queryParams.next(convertToParamMap({ q: 'ignored' }));
 
     expect(component.searchTerm()).toBe('');
+  });
+
+  it('links creators to Creator Studio and explains the role to viewers', () => {
+    isCreator = true;
+    const creatorFixture = TestBed.createComponent(DashboardComponent);
+    creatorFixture.detectChanges();
+    expect(creatorFixture.nativeElement.querySelector('.cta-card a[href="/creator-studio"]')).not.toBeNull();
+
+    isCreator = false;
+    const viewerFixture = TestBed.createComponent(DashboardComponent);
+    viewerFixture.detectChanges();
+    expect(viewerFixture.nativeElement.querySelector('.cta-card a[href="/creator-studio"]')).toBeNull();
+    expect(viewerFixture.nativeElement.querySelector('.cta-card').textContent).toContain('rol de creador');
+  });
+
+  it('shows a notice after a creator-only redirect', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    queryParams.next(convertToParamMap({ notice: 'creator-only' }));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.dashboard-notice')?.textContent).toContain('solo para cuentas de creador');
   });
 });
 

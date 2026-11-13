@@ -1,0 +1,77 @@
+<section class="ai-panel" aria-labelledby="ai-panel-title">
+  <div class="ai-container">
+    <div class="ai-card">
+      <header class="ai-header">
+        <div class="ai-heading">
+          <span class="ai-icon" aria-hidden="true">✦</span>
+          <div>
+            <h2 id="ai-panel-title" class="ai-title">Kino IA</h2>
+            <p class="ai-subtitle">Lo más visto en Kino Streaming, analizado para ti</p>
+          </div>
+        </div>
+        <span class="ai-source" [class.ai-source--ai]="insights().source === 'ai'">{{ sourceLabel() }}</span>
+      </header>
+
+      <p class="ai-summary">{{ insights().summary }}</p>
+
+      <dl class="ai-stats">
+        <div><dt>Reproducciones analizadas</dt><dd>{{ insights().totalViews | number }}</dd></div>
+        <div><dt>En vivo ahora</dt><dd>{{ insights().liveNow }}</dd></div>
+        <div><dt>Videos en tendencia</dt><dd>{{ insights().mostWatched.length }}</dd></div>
+      </dl>
+
+      <div class="ai-columns">
+        <div>
+          <h3 class="ai-column-title">Ranking de lo más visto</h3>
+          @if (insights().mostWatched.length) {
+            <ol class="ai-ranking">
+              @for (video of insights().mostWatched; track video.id; let position = $index) {
+                <li>
+                  <a [routerLink]="['/watch', video.id]" class="ai-rank-item">
+                    <span class="ai-rank">{{ position + 1 }}</span>
+                    <span class="ai-rank-text">
+                      <span class="ai-rank-title">{{ video.title }}</span>
+                      <span class="ai-rank-meta">{{ video.creator }} · {{ video.views }} vistas</span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="ai-empty">Aún no hay reproducciones suficientes.</p>
+          }
+        </div>
+
+        <div>
+          <h3 class="ai-column-title">Categorías más vistas</h3>
+          @if (insights().topCategories.length) {
+            <ul class="ai-categories">
+              @for (category of insights().topCategories; track category.category) {
+                <li>
+                  <div class="ai-category-row">
+                    <span>{{ category.category }}</span>
+                    <span class="ai-category-views">{{ category.totalViews | number }} vistas</span>
+                  </div>
+                  <div class="ai-bar" aria-hidden="true">
+                    <span [style.width.%]="categoryWidth(category.totalViews)"></span>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="ai-empty">Publica videos para ver categorías.</p>
+          }
+
+          @if (insights().rising.length) {
+            <h3 class="ai-column-title ai-rising-title">En ascenso esta semana</h3>
+            <ul class="ai-rising">
+              @for (video of insights().rising; track video.id) {
+                <li><a [routerLink]="['/watch', video.id]">{{ video.title }}</a></li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

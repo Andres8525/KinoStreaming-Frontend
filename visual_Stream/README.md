@@ -50,6 +50,9 @@ Preview deployments get a different URL each time, so they can only call the API
 - **Dashboard**: personalized recommendations, trending videos and the full catalog, with accent-insensitive search (`?q=`) and category filters. Video cards show whether access is free or paid.
 - **Player**: streams each video from its `videoUrl`, records one view per session and shows the video title in the browser tab.
 - **Creator Studio** (only `CREATOR` accounts): publish videos with tags, access price and suggested donation, see analytics, and delete published videos. Viewers do not see the link and are redirected with an explanation.
+- **En vivo ahora**: live broadcasts appear on the dashboard and open in `/live/:id`, which plays HLS (`.m3u8`) with hls.js (loaded only on that page) or natively on Safari, and detects when the broadcast ends.
+- **Transmitir en vivo** (Creator Studio tab, also `/creator-studio?tab=live`): creators register the HLS playback URL of their stream (OBS → Cloudflare Stream, Mux, AWS IVS, nginx-rtmp…) to go live, and end it from the same tab.
+- **Kino IA**: dashboard panel with the most watched ranking, top categories, rising videos and a summary from `/api/ai/trending-insights`. It shows whether the summary was written by the AI provider or by Kino's built-in analysis; connecting the AI API only requires backend configuration.
 - **Not-found page** for unknown URLs and branded tab titles (`<page> · Kino`).
 
 New accounts are created as `VIEWER`. The `CREATOR` role is granted by an administrator in the database (see the backend README). Payments and file uploads are not implemented: videos are published by URL and must be publicly reachable in a browser-supported format such as MP4.
@@ -63,8 +66,10 @@ src/app/
     auth/       auth service, guards, interceptors, JWT helpers
     routing/    page title strategy
     text/       accent-insensitive text normalization
+    ai/         Kino IA trending insights client
+    live/       live streaming client and models
     videos/     video API service, models and formatters
-  components/   navbar, video card
-  pages/        dashboard, video player, creator studio, login, register, not found
+  components/   navbar, video card, live-now strip, Kino IA panel, go-live panel
+  pages/        dashboard, video player, live watch, creator studio, login, register, not found
 src/environments/  API URL per build configuration
 ```

@@ -54,6 +54,17 @@ describe('CreatorStudioComponent', () => {
     expect(harness.routeNativeElement?.querySelector('app-go-live-panel')).not.toBeNull();
   });
 
+  it('invites creators to go live with the camera from the upload tab', () => {
+    const fixture = TestBed.createComponent(CreatorStudioComponent);
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('.live-callout-btn') as HTMLButtonElement;
+
+    button.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.activeTab()).toBe('live');
+  });
+
   it('keeps the selected tab in the URL', async () => {
     TestBed.inject(Router).resetConfig([{ path: '', component: CreatorStudioComponent }]);
     const harness = await RouterTestingHarness.create();

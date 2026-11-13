@@ -43,6 +43,14 @@
 
       @if (activeTab() === 'upload') {
         <div class="tab-content">
+          <aside class="live-callout">
+            <span class="live-callout-dot" aria-hidden="true"></span>
+            <div class="live-callout-text">
+              <strong>¿Prefieres transmitir en vivo?</strong>
+              <span>Abre tu cámara y empieza ahora: cualquier persona con cuenta en Kino podrá verte.</span>
+            </div>
+            <button type="button" class="live-callout-btn" (click)="setTab('live')">Transmitir con mi cámara</button>
+          </aside>
           <div class="upload-grid">
             <form class="form-section" (ngSubmit)="publishVideo()">
               <h2 class="card-section-title">Detalles de publicación</h2>

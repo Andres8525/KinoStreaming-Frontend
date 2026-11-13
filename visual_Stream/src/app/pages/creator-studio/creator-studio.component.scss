@@ -930,3 +930,50 @@ a.creator-video-title:focus-visible {
   border-radius: 50%;
   background: #ef4444;
 }
+
+.live-callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border: 1px solid #FFC4B3;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FFF4EF 0%, #FFFFFF 100%);
+}
+
+.live-callout-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #EF4444;
+  box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15);
+}
+
+.live-callout-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  color: #475569;
+
+  strong {
+    color: #0F172A;
+  }
+}
+
+.live-callout-btn {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #FF6B45;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #F25530;
+  }
+}

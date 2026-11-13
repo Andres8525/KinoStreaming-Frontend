@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { VideoCardData } from '../../core/videos/video.models';
 
+const PRICE_FORMAT = new Intl.NumberFormat('es', { style: 'currency', currency: 'USD' });
+
 @Component({
   selector: 'app-video-card',
   standalone: true,
@@ -14,6 +16,16 @@ export class VideoCardComponent {
   @Input({ required: true }) video!: VideoCardData;
   @Input() animationDelay: number = 0;
   imageFailed = false;
+
+  /** "Gratis" for free videos, otherwise the access price in USD. */
+  get priceLabel(): string {
+    const price = Number(this.video.accessPrice);
+    return Number.isFinite(price) && price > 0 ? PRICE_FORMAT.format(price) : 'Gratis';
+  }
+
+  get isFree(): boolean {
+    return this.priceLabel === 'Gratis';
+  }
 
   get gradientStyle(): string {
     const gradients = [

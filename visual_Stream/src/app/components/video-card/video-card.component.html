@@ -12,6 +12,9 @@
         </svg>
       </div>
     </div>
+    <div class="price-badge" [class.price-badge--free]="isFree" [attr.aria-label]="'Acceso: ' + priceLabel">
+      {{ priceLabel }}
+    </div>
     @if (video.duration) {
       <div class="duration-badge">{{ video.duration }}</div>
     }

@@ -42,6 +42,7 @@ export class NavbarComponent {
 
   submitSearch() {
     const query = this.searchQuery().trim();
+    this.isMenuOpen.set(false);
     void this.router.navigate(['/'], { queryParams: { q: query || null } });
   }
 }

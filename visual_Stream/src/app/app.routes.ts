@@ -9,10 +9,10 @@ import { authGuard } from './core/auth/auth.guard';
 import { creatorGuard } from './core/auth/creator.guard';
 
 export const routes: Routes = [
-  { path: '', component: DashboardComponent, canActivate: [authGuard] },
-  { path: 'creator-studio', component: CreatorStudioComponent, canActivate: [creatorGuard] },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'watch/:id', component: VideoPlayerComponent, canActivate: [authGuard] },
-  { path: '**', component: NotFoundComponent }
+  { path: '', title: 'Inicio', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'creator-studio', title: 'Creator Studio', component: CreatorStudioComponent, canActivate: [creatorGuard] },
+  { path: 'login', title: 'Iniciar sesión', component: LoginComponent },
+  { path: 'register', title: 'Crear cuenta', component: RegisterComponent },
+  { path: 'watch/:id', title: 'Reproducir', component: VideoPlayerComponent, canActivate: [authGuard] },
+  { path: '**', title: 'Página no encontrada', component: NotFoundComponent }
 ];

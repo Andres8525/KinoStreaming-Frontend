@@ -13,22 +13,61 @@
       <div class="status-header">
         <span class="status-badge">EN VIVO</span>
         <span class="status-since">Desde {{ stream.startedAgo }}</span>
+        @if (broadcaster()) {
+          <span class="viewer-count" aria-live="polite">
+            {{ viewerCount() }} {{ viewerCount() === 1 ? 'espectador' : 'espectadores' }}
+          </span>
+        }
       </div>
       <h2 class="go-live-title">{{ stream.title }}</h2>
       <p class="go-live-desc">{{ stream.category }}@if (stream.description) { · {{ stream.description }} }</p>
-      <p class="status-url"><span>Reproducción:</span> {{ stream.playbackUrl }}</p>
+
+      @if (stream.sourceType === 'CAMERA') {
+        <div class="camera-frame">
+          <video #preview class="camera-preview" autoplay muted playsinline aria-label="Vista previa de tu cámara"></video>
+          @if (!camera()) {
+            <div class="camera-placeholder">
+              <p>Tu cámara está apagada: los espectadores no te ven.</p>
+              <button type="button" class="go-live-btn primary" [disabled]="isOpeningCamera()" (click)="resumeCamera()">
+                {{ isOpeningCamera() ? 'Abriendo cámara…' : 'Reanudar cámara' }}
+              </button>
+            </div>
+          }
+        </div>
+        @if (cameraError()) {
+          <p class="field-error" role="alert">{{ cameraError() }}</p>
+        }
+        @if (connectionProblem()) {
+          <p class="go-live-message error" role="alert">Se perdió la conexión con Kino. Reintentando…</p>
+        }
+        <p class="help-note">Mantén esta pestaña abierta mientras transmites: tus espectadores reciben el video directamente desde aquí.</p>
+      } @else {
+        <p class="status-url"><span>Reproducción:</span> {{ stream.playbackUrl }}</p>
+      }
+
       <div class="go-live-actions">
-        <a class="go-live-btn secondary" [routerLink]="['/live', stream.id]">Ver mi transmisión</a>
+        <a class="go-live-btn secondary" [routerLink]="['/live', stream.id]" target="_blank">Ver mi transmisión</a>
         <button type="button" class="go-live-btn danger" [disabled]="isSubmitting()" (click)="endStream()">
           {{ isSubmitting() ? 'Finalizando…' : 'Finalizar transmisión' }}
         </button>
       </div>
     </article>
   } @else {
+    <div class="mode-switch" role="tablist" aria-label="Cómo quieres transmitir">
+      <button type="button" role="tab" class="mode-option" [class.active]="mode() === 'camera'"
+              [attr.aria-selected]="mode() === 'camera'" (click)="setMode('camera')">
+        Con mi cámara
+      </button>
+      <button type="button" role="tab" class="mode-option" [class.active]="mode() === 'hls'"
+              [attr.aria-selected]="mode() === 'hls'" (click)="setMode('hls')">
+        Con OBS (HLS)
+      </button>
+    </div>
+
     <div class="go-live-grid">
       <form class="go-live-card" [formGroup]="form" (ngSubmit)="startStream()" novalidate>
         <h2 class="go-live-title">Iniciar transmisión</h2>
-        <p class="go-live-desc">Tu directo aparecerá en «En vivo ahora» del inicio de Kino mientras esté activo.</p>
+        <p class="go-live-desc">Tu directo aparecerá en «En vivo ahora» del inicio de Kino y cualquier persona con cuenta podrá verlo.</p>
 
         <label class="field" for="live-title">
           <span>Título</span>
@@ -52,34 +91,65 @@
           <textarea id="live-description" rows="3" formControlName="description" maxlength="1000"></textarea>
         </label>
 
-        <label class="field" for="live-playback-url">
-          <span>URL de reproducción (HLS .m3u8)</span>
-          <input id="live-playback-url" type="url" formControlName="playbackUrl" placeholder="https://tu-servicio.com/live/stream.m3u8"/>
-          @if (hasError('playbackUrl')) { <small class="field-error">Introduce una URL HTTP o HTTPS válida.</small> }
-        </label>
+        @if (mode() === 'hls') {
+          <label class="field" for="live-playback-url">
+            <span>URL de reproducción (HLS .m3u8)</span>
+            <input id="live-playback-url" type="url" formControlName="playbackUrl" placeholder="https://tu-servicio.com/live/stream.m3u8"/>
+            @if (hasError('playbackUrl')) { <small class="field-error">Introduce una URL HTTP o HTTPS válida.</small> }
+          </label>
 
-        <label class="field" for="live-thumbnail-url">
-          <span>Miniatura <em>(opcional)</em></span>
-          <input id="live-thumbnail-url" type="url" formControlName="thumbnailUrl" placeholder="https://cdn.example.com/portada.jpg"/>
-          @if (hasError('thumbnailUrl')) { <small class="field-error">Introduce una URL HTTP o HTTPS válida.</small> }
-        </label>
+          <label class="field" for="live-thumbnail-url">
+            <span>Miniatura <em>(opcional)</em></span>
+            <input id="live-thumbnail-url" type="url" formControlName="thumbnailUrl" placeholder="https://cdn.example.com/portada.jpg"/>
+            @if (hasError('thumbnailUrl')) { <small class="field-error">Introduce una URL HTTP o HTTPS válida.</small> }
+          </label>
+        }
 
-        <button type="submit" class="go-live-btn primary" [disabled]="isSubmitting()">
-          {{ isSubmitting() ? 'Iniciando…' : 'Iniciar transmisión' }}
+        <button type="submit" class="go-live-btn primary"
+                [disabled]="isSubmitting() || (mode() === 'camera' && !camera())">
+          {{ isSubmitting() ? 'Iniciando…' : (mode() === 'camera' ? 'Empezar a transmitir' : 'Iniciar transmisión') }}
         </button>
       </form>
 
-      <aside class="go-live-card go-live-help">
-        <h3>¿Cómo transmitir?</h3>
-        <ol>
-          <li>Crea una entrada en vivo en tu servicio de streaming (Cloudflare Stream, Mux, AWS IVS o un servidor nginx-rtmp propio).</li>
-          <li>En OBS, ve a <strong>Ajustes → Emisión</strong> y pega el servidor RTMP y la clave de transmisión de ese servicio.</li>
-          <li>Pulsa <strong>Iniciar transmisión</strong> en OBS.</li>
-          <li>Copia aquí la URL pública de reproducción <strong>HLS (.m3u8)</strong> y pulsa «Iniciar transmisión».</li>
-          <li>Cuando termines, detén OBS y pulsa «Finalizar transmisión».</li>
-        </ol>
-        <p class="help-note">Kino no recibe el video directamente: lo reproduce desde la URL pública de tu servicio de streaming.</p>
-      </aside>
+      @if (mode() === 'camera') {
+        <aside class="go-live-card camera-setup">
+          <h3>Tu cámara</h3>
+          <div class="camera-frame">
+            <video #preview class="camera-preview" autoplay muted playsinline aria-label="Vista previa de tu cámara"></video>
+            @if (!camera()) {
+              <div class="camera-placeholder">
+                <p>Abre tu cámara para ver cómo te verán los espectadores.</p>
+                <button type="button" class="go-live-btn primary" [disabled]="isOpeningCamera() || !webRtcSupported"
+                        (click)="openCamera()">
+                  {{ isOpeningCamera() ? 'Abriendo cámara…' : 'Abrir cámara' }}
+                </button>
+              </div>
+            }
+          </div>
+          @if (cameraError()) {
+            <p class="field-error" role="alert">{{ cameraError() }}</p>
+          }
+          @if (!webRtcSupported) {
+            <p class="field-error" role="alert">Este navegador no admite transmisiones en vivo. Usa Chrome, Edge, Firefox o Safari.</p>
+          }
+          @if (camera()) {
+            <button type="button" class="go-live-btn secondary" (click)="closeCamera()">Apagar cámara</button>
+          }
+          <p class="help-note">El navegador te pedirá permiso para usar la cámara y el micrófono. Mientras transmites, mantén esta pestaña abierta.</p>
+        </aside>
+      } @else {
+        <aside class="go-live-card go-live-help">
+          <h3>¿Cómo transmitir con OBS?</h3>
+          <ol>
+            <li>Crea una entrada en vivo en tu servicio de streaming (Cloudflare Stream, Mux, AWS IVS o un servidor nginx-rtmp propio).</li>
+            <li>En OBS, ve a <strong>Ajustes → Emisión</strong> y pega el servidor RTMP y la clave de transmisión de ese servicio.</li>
+            <li>Pulsa <strong>Iniciar transmisión</strong> en OBS.</li>
+            <li>Copia aquí la URL pública de reproducción <strong>HLS (.m3u8)</strong> y pulsa «Iniciar transmisión».</li>
+            <li>Cuando termines, detén OBS y pulsa «Finalizar transmisión».</li>
+          </ol>
+          <p class="help-note">Con OBS, Kino reproduce el video desde la URL pública de tu servicio de streaming.</p>
+        </aside>
+      }
     </div>
   }
 </section>

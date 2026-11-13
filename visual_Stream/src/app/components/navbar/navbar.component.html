@@ -19,12 +19,14 @@
         </svg>
         Inicio
       </a>
-      <a routerLink="/creator-studio" routerLinkActive="active-link" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="nav-icon">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/>
-        </svg>
-        Creator Studio
-      </a>
+      @if ((user$ | async)?.role === 'CREATOR') {
+        <a routerLink="/creator-studio" routerLinkActive="active-link" class="nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="nav-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/>
+          </svg>
+          Creator Studio
+        </a>
+      }
     </div>
 
     <!-- Search Bar -->
@@ -75,9 +77,11 @@
       <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" class="mobile-link" (click)="toggleMenu()">
         Inicio
       </a>
-      <a routerLink="/creator-studio" routerLinkActive="active-link" class="mobile-link" (click)="toggleMenu()">
-        Creator Studio
-      </a>
+      @if ((user$ | async)?.role === 'CREATOR') {
+        <a routerLink="/creator-studio" routerLinkActive="active-link" class="mobile-link" (click)="toggleMenu()">
+          Creator Studio
+        </a>
+      }
       @if (user$ | async; as user) {
         <span class="mobile-link text-slate-500">{{ user.email }}</span>
         <button type="button" class="mobile-link text-left" (click)="logout(); toggleMenu()">Cerrar sesión</button>

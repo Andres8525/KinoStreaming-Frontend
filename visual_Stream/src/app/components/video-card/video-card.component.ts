@@ -17,7 +17,6 @@ export class VideoCardComponent {
   @Input() animationDelay: number = 0;
   imageFailed = false;
 
-  /** "Gratis" for free videos, otherwise the access price in USD. */
   get priceLabel(): string {
     const price = Number(this.video.accessPrice);
     return Number.isFinite(price) && price > 0 ? PRICE_FORMAT.format(price) : 'Gratis';

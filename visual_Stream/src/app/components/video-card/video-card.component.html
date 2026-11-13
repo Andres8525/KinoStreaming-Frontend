@@ -1,5 +1,4 @@
 <a [routerLink]="['/watch', video.id]" class="card" [style.animation-delay.ms]="animationDelay">
-  <!-- Thumbnail -->
   <div class="card-thumbnail" [style.background]="gradientStyle">
     @if (video.thumbnail) {
       <img class="thumbnail-image absolute inset-0 h-full w-full object-cover" [class.image-failed]="imageFailed" [src]="video.thumbnail" [alt]="video.title" loading="lazy" (error)="imageFailed = true"/>
@@ -20,7 +19,6 @@
     }
   </div>
 
-  <!-- Info -->
   <div class="card-info">
     <div class="card-meta-top">
       <span class="category-tag" [style.background]="categoryBg" [style.color]="categoryColor">

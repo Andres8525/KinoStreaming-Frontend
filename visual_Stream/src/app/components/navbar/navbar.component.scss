@@ -320,3 +320,14 @@
     display: flex;
   }
 }
+
+.nav-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.nav-link-live {
+  gap: 8px;
+}

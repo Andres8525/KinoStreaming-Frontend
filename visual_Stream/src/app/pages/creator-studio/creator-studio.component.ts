@@ -1,23 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { GoLivePanelComponent } from '../../components/go-live-panel/go-live-panel.component';
 import { apiErrorMessage } from '../../core/api/api-error';
 import { normalizeText } from '../../core/text/normalize-text';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
 
+type StudioTab = 'upload' | 'live' | 'monetization' | 'analytics';
+const STUDIO_TABS: readonly StudioTab[] = ['upload', 'live', 'monetization', 'analytics'];
+
+function isStudioTab(value: string | null): value is StudioTab {
+  return STUDIO_TABS.includes(value as StudioTab);
+}
+
 @Component({
   selector: 'app-creator-studio',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, GoLivePanelComponent],
   templateUrl: './creator-studio.component.html',
   styleUrl: './creator-studio.component.scss'
 })
 export class CreatorStudioComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
+  private readonly route = inject(ActivatedRoute);
 
-  readonly activeTab = signal<'upload' | 'monetization' | 'analytics'>('upload');
+  readonly activeTab = signal<StudioTab>('upload');
   readonly videoTitle = signal('');
   readonly videoDescription = signal('');
   readonly videoUrl = signal('');
@@ -48,11 +57,15 @@ export class CreatorStudioComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    const requestedTab = this.route.snapshot.queryParamMap.get('tab');
+    if (isStudioTab(requestedTab)) {
+      this.activeTab.set(requestedTab);
+    }
     this.loadVideos();
     this.loadAnalytics();
   }
 
-  setTab(tab: 'upload' | 'monetization' | 'analytics'): void {
+  setTab(tab: StudioTab): void {
     this.activeTab.set(tab);
   }
 

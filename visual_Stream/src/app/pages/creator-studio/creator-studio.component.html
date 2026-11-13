@@ -22,6 +22,9 @@
         <button type="button" class="tab" [class.active]="activeTab() === 'upload'" (click)="setTab('upload')">
           Publicar video
         </button>
+        <button type="button" class="tab" [class.active]="activeTab() === 'live'" (click)="setTab('live')">
+          <span class="tab-live-dot" aria-hidden="true"></span> Transmitir en vivo
+        </button>
         <button type="button" class="tab" [class.active]="activeTab() === 'monetization'" (click)="setTab('monetization')">
           Precios
         </button>
@@ -158,6 +161,12 @@
               }
             }
           </section>
+        </div>
+      }
+
+      @if (activeTab() === 'live') {
+        <div class="tab-content">
+          <app-go-live-panel/>
         </div>
       }
 

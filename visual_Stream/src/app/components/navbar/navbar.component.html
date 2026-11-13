@@ -27,6 +27,12 @@
           Creator Studio
         </a>
       }
+      @if ((user$ | async)?.role === 'CREATOR') {
+        <a routerLink="/creator-studio" [queryParams]="{ tab: 'live' }" class="nav-link nav-link-live">
+          <span class="nav-live-dot" aria-hidden="true"></span>
+          Transmitir
+        </a>
+      }
     </div>
 
     <!-- Search Bar -->
@@ -83,6 +89,9 @@
       @if ((user$ | async)?.role === 'CREATOR') {
         <a routerLink="/creator-studio" routerLinkActive="active-link" class="mobile-link" (click)="toggleMenu()">
           Creator Studio
+        </a>
+        <a routerLink="/creator-studio" [queryParams]="{ tab: 'live' }" class="mobile-link" (click)="toggleMenu()">
+          Transmitir en vivo
         </a>
       }
       @if (user$ | async; as user) {

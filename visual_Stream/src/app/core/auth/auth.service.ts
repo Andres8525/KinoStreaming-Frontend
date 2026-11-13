@@ -46,15 +46,10 @@ export class AuthService {
     return this.getToken() !== null;
   }
 
-  /** Current profile, or null when signed out. */
   currentUser(): UserProfile | null {
     return this.isAuthenticated() ? this.userSubject.value : null;
   }
 
-  /**
-   * True when the signed-in account can publish videos and go live. Every account can (the backend creates
-   * them as CREATOR and accepts older VIEWER accounts too), so this only requires a session.
-   */
   isCreator(): boolean {
     return this.currentUser() !== null;
   }
@@ -68,7 +63,6 @@ export class AuthService {
       sessionStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(USER_KEY);
     }
-    // getToken() can run while userSubject is being initialised.
     this.userSubject?.next(null);
   }
 

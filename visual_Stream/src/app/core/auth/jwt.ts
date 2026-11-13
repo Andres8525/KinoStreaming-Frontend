@@ -1,8 +1,3 @@
-/**
- * Reads the `exp` claim (seconds since epoch) from a JWT without verifying it.
- * Verification happens on the backend; the frontend only needs to know when to
- * stop sending a token that has already expired.
- */
 export function tokenExpiration(token: string): number | null {
   const payload = token.split('.')[1];
   if (!payload) {
@@ -21,7 +16,6 @@ export function tokenExpiration(token: string): number | null {
   return null;
 }
 
-/** True when the token has an `exp` claim in the past (with a small clock-skew margin). */
 export function isTokenExpired(token: string, now: number = Date.now(), skewMillis = 10_000): boolean {
   const expiration = tokenExpiration(token);
   return expiration !== null && expiration <= now + skewMillis;

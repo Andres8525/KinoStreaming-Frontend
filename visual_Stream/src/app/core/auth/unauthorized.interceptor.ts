@@ -5,11 +5,6 @@ import { catchError, throwError } from 'rxjs';
 import { API_BASE_URL } from '../api/api.constants';
 import { AuthService } from './auth.service';
 
-/**
- * When the API rejects the session (401) — expired token, revoked or deleted account —
- * clears the local session and sends the user to the login page, keeping the current URL
- * so they come back after signing in. Login/register errors are left to their forms.
- */
 export const unauthorizedInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);

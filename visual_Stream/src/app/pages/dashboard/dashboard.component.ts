@@ -3,7 +3,13 @@ import { Component, computed, DestroyRef, inject, OnInit, signal, WritableSignal
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
+import { AiInsightsPanelComponent } from '../../components/ai-insights-panel/ai-insights-panel.component';
+import { LiveNowComponent } from '../../components/live-now/live-now.component';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
+import { AiInsightsService } from '../../core/ai/ai-insights.service';
+import { TrendingInsights } from '../../core/ai/ai-insights.models';
+import { LiveApiService } from '../../core/live/live-api.service';
+import { LiveStreamData } from '../../core/live/live.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { normalizeText } from '../../core/text/normalize-text';
 import { VideoApiService } from '../../core/videos/video-api.service';
@@ -12,12 +18,14 @@ import { VideoCardData } from '../../core/videos/video.models';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, VideoCardComponent],
+  imports: [CommonModule, RouterLink, VideoCardComponent, LiveNowComponent, AiInsightsPanelComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
+  private readonly liveApi = inject(LiveApiService);
+  private readonly aiInsightsApi = inject(AiInsightsService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
@@ -31,6 +39,8 @@ export class DashboardComponent implements OnInit {
   readonly recommendations = signal<VideoCardData[]>([]);
   readonly trending = signal<VideoCardData[]>([]);
   readonly catalog = signal<VideoCardData[]>([]);
+  readonly liveStreams = signal<LiveStreamData[]>([]);
+  readonly insights = signal<TrendingInsights | null>(null);
   readonly searchTerm = signal('');
   readonly isLoading = signal(true);
   readonly errors = signal<string[]>([]);
@@ -76,6 +86,10 @@ export class DashboardComponent implements OnInit {
       'No se pudo cargar la lista de tendencias.');
     this.load(this.videoApi.getCatalog(), this.catalog,
       'No se pudo cargar el catálogo de videos.');
+    this.load(this.liveApi.getLiveNow(), this.liveStreams,
+      'No se pudieron cargar las transmisiones en vivo.');
+    this.load<TrendingInsights | null>(this.aiInsightsApi.getTrendingInsights(), this.insights,
+      'No se pudo cargar el análisis de Kino IA.');
   }
 
   setCategory(category: string): void {
@@ -92,9 +106,9 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private load(
-    request: Observable<VideoCardData[]>,
-    target: WritableSignal<VideoCardData[]>,
+  private load<T>(
+    request: Observable<T>,
+    target: WritableSignal<T>,
     errorMessage: string
   ): void {
     this.pendingLoads++;
@@ -108,7 +122,7 @@ export class DashboardComponent implements OnInit {
     };
 
     request.subscribe({
-      next: videos => target.set(videos),
+      next: value => target.set(value),
       error: () => {
         this.errors.update(errors => [...errors, errorMessage]);
         finish();

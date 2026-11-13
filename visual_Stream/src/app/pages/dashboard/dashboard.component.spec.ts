@@ -2,7 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, ParamMap, provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
+import { AiInsightsService } from '../../core/ai/ai-insights.service';
+import { TrendingInsights } from '../../core/ai/ai-insights.models';
 import { AuthService } from '../../core/auth/auth.service';
+import { LiveApiService } from '../../core/live/live-api.service';
+import { LiveStreamData } from '../../core/live/live.models';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
 import { DashboardComponent } from './dashboard.component';
@@ -17,6 +21,8 @@ describe('DashboardComponent', () => {
   };
   let queryParams: Subject<ParamMap>;
   let isCreator = false;
+  let liveApi: { getLiveNow: ReturnType<typeof vi.fn> };
+  let aiInsights: { getTrendingInsights: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     queryParams = new Subject<ParamMap>();
@@ -25,6 +31,8 @@ describe('DashboardComponent', () => {
       getTrending: vi.fn(() => of([musicVideo, decomposedAnimationVideo])),
       getRecommendations: vi.fn(() => of([musicVideo, decomposedAnimationVideo]))
     };
+    liveApi = { getLiveNow: vi.fn(() => of([] as LiveStreamData[])) };
+    aiInsights = { getTrendingInsights: vi.fn(() => of(createInsights())) };
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
@@ -37,7 +45,9 @@ describe('DashboardComponent', () => {
           provide: VideoApiService,
           useValue: videoApi
         },
-        { provide: AuthService, useValue: { isCreator: () => isCreator } }
+        { provide: AuthService, useValue: { isCreator: () => isCreator } },
+        { provide: LiveApiService, useValue: liveApi },
+        { provide: AiInsightsService, useValue: aiInsights }
       ]
     }).compileComponents();
   });
@@ -110,6 +120,42 @@ describe('DashboardComponent', () => {
 
     expect(fixture.nativeElement.querySelector('.dashboard-notice')?.textContent).toContain('solo para cuentas de creador');
   });
+
+  it('shows the Kino IA panel with the most watched ranking', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    const panel = fixture.nativeElement.querySelector('app-ai-insights-panel') as HTMLElement;
+
+    expect(panel.textContent).toContain('Kino IA');
+    expect(panel.textContent).toContain('Lo más visto en Kino ahora es «Música en vivo»');
+    expect(panel.textContent).toContain('Análisis automático de Kino');
+    expect(panel.querySelector('.ai-ranking a[href="/watch/music"]')).not.toBeNull();
+  });
+
+  it('lists live broadcasts only when someone is streaming', () => {
+    const empty = TestBed.createComponent(DashboardComponent);
+    empty.detectChanges();
+    expect(empty.nativeElement.querySelector('app-live-now')).toBeNull();
+
+    liveApi.getLiveNow.mockReturnValue(of([createLiveStream()]));
+    const live = TestBed.createComponent(DashboardComponent);
+    live.detectChanges();
+    const card = live.nativeElement.querySelector('app-live-now a.live-card') as HTMLAnchorElement;
+
+    expect(card.getAttribute('href')).toBe('/live/stream-1');
+    expect(card.textContent).toContain('EN VIVO');
+    expect(card.textContent).toContain('Ensayo abierto');
+  });
+
+  it('reports a Kino IA failure without hiding the rest of the dashboard', () => {
+    aiInsights.getTrendingInsights.mockReturnValue(throwError(() => new Error('down')));
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.errors()).toEqual(['No se pudo cargar el análisis de Kino IA.']);
+    expect(fixture.componentInstance.trendingVideos().length).toBe(2);
+    expect(fixture.nativeElement.querySelector('app-ai-insights-panel')).toBeNull();
+  });
 });
 
 function createVideo(id: string, title: string, tags: string[]): VideoCardData {
@@ -129,5 +175,35 @@ function createVideo(id: string, title: string, tags: string[]): VideoCardData {
     tags,
     accessPrice: 0,
     suggestedDonation: null
+  };
+}
+
+function createInsights(): TrendingInsights {
+  return {
+    generatedAt: '2026-11-12T12:00:00Z',
+    source: 'kino-analytics',
+    summary: 'Lo más visto en Kino ahora es «Música en vivo» de Ana Ruiz con 12 reproducciones.',
+    mostWatched: [createVideo('music', 'Música en vivo', ['Música'])],
+    rising: [],
+    topCategories: [{ category: 'Música', videoCount: 1, totalViews: 12 }],
+    totalViews: 12,
+    liveNow: 0
+  };
+}
+
+function createLiveStream(): LiveStreamData {
+  return {
+    id: 'stream-1',
+    title: 'Ensayo abierto',
+    description: '',
+    category: 'Música',
+    playbackUrl: 'https://live.example.com/stream.m3u8',
+    thumbnail: '',
+    isLive: true,
+    creator: 'Ana Ruiz',
+    creatorAvatar: 'AR',
+    startedAt: '2026-11-12T11:00:00Z',
+    startedAgo: 'hace 1 hora',
+    endedAt: null
   };
 }

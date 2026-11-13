@@ -58,6 +58,10 @@
     </section>
   }
 
+  @if (liveStreams().length) {
+    <app-live-now [streams]="liveStreams()"/>
+  }
+
   <section class="categories-section">
     <div class="section-container mx-auto w-full max-w-350 px-6">
       <div class="categories-scroll" aria-label="Filtrar por categoría">
@@ -140,6 +144,10 @@
       }
     </div>
   </section>
+
+  @if (insights(); as kinoInsights) {
+    <app-ai-insights-panel [insights]="kinoInsights"/>
+  }
 
   <section class="cta-section">
     <div class="section-container mx-auto w-full max-w-350 px-6">

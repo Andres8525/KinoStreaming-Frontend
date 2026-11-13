@@ -46,6 +46,16 @@ export class AuthService {
     return this.getToken() !== null;
   }
 
+  /** Current profile, or null when signed out. */
+  currentUser(): UserProfile | null {
+    return this.isAuthenticated() ? this.userSubject.value : null;
+  }
+
+  /** True when the signed-in account can publish videos. */
+  isCreator(): boolean {
+    return this.currentUser()?.role === 'CREATOR';
+  }
+
   logout(): void {
     this.clearSession();
   }

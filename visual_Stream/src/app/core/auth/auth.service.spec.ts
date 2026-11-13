@@ -42,6 +42,16 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
   });
 
+  it('reports the creator role of the current user', () => {
+    expect(service.isCreator()).toBe(false);
+
+    service.login({ email: response.email, password: 'secure-password' }).subscribe();
+    httpTesting.expectOne(`${API_BASE_URL}/auth/login`).flush({ ...response, role: 'CREATOR' });
+
+    expect(service.currentUser()).toEqual({ email: response.email, role: 'CREATOR' });
+    expect(service.isCreator()).toBe(true);
+  });
+
   it('drops an expired stored token and its profile', () => {
     const claims = btoa(JSON.stringify({ sub: response.email, exp: Math.floor(Date.now() / 1000) - 60 }));
     sessionStorage.setItem('kino.accessToken', `header.${claims.replace(/=+$/, '')}.signature`);

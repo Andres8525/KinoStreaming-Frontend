@@ -4,6 +4,7 @@ import { inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject, tap } from 'rxjs';
 import { API_BASE_URL } from '../api/api.constants';
 import { AuthResponse, LoginRequest, RegisterRequest, UserProfile } from './auth.models';
+import { isTokenExpired } from './jwt';
 
 const API_URL = `${API_BASE_URL}/auth`;
 const TOKEN_KEY = 'kino.accessToken';
@@ -29,7 +30,16 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return this.isBrowser ? sessionStorage.getItem(TOKEN_KEY) : null;
+    if (!this.isBrowser) {
+      return null;
+    }
+
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    if (token && isTokenExpired(token)) {
+      this.clearSession();
+      return null;
+    }
+    return token;
   }
 
   isAuthenticated(): boolean {
@@ -37,11 +47,16 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearSession();
+  }
+
+  private clearSession(): void {
     if (this.isBrowser) {
       sessionStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(USER_KEY);
     }
-    this.userSubject.next(null);
+    // getToken() can run while userSubject is being initialised.
+    this.userSubject?.next(null);
   }
 
   private saveSession(response: AuthResponse): void {

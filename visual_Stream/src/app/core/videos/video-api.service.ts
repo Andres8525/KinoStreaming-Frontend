@@ -9,6 +9,7 @@ import {
   VideoCardData,
   VideoResponse
 } from './video.models';
+import { formatCount, formatTimeAgo, initials } from './video-format';
 
 @Injectable({ providedIn: 'root' })
 export class VideoApiService {
@@ -64,8 +65,7 @@ export function toVideoCardData(video: VideoResponse): VideoCardData {
     creator: video.creator.displayName,
     creatorAvatar: initials(video.creator.displayName),
     thumbnail: video.thumbnailUrl ?? '',
-    views: new Intl.NumberFormat('es', { notation: 'compact', maximumFractionDigits: 1 })
-      .format(video.viewCount),
+    views: formatCount(video.viewCount),
     viewCount: video.viewCount,
     duration: '',
     category: video.tags[0] ?? 'Sin categoría',
@@ -74,33 +74,4 @@ export function toVideoCardData(video: VideoResponse): VideoCardData {
     accessPrice: video.accessPrice,
     suggestedDonation: video.suggestedDonation
   };
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('');
-}
-
-function formatTimeAgo(createdAt: string): string {
-  const timestamp = Date.parse(createdAt);
-  if (Number.isNaN(timestamp)) {
-    return '';
-  }
-
-  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-    ['year', 31_536_000],
-    ['month', 2_592_000],
-    ['week', 604_800],
-    ['day', 86_400],
-    ['hour', 3_600],
-    ['minute', 60]
-  ];
-  const formatter = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
-
-  for (const [unit, seconds] of units) {
-    if (elapsedSeconds >= seconds) {
-      return formatter.format(-Math.floor(elapsedSeconds / seconds), unit);
-    }
-  }
-  return formatter.format(0, 'minute');
 }

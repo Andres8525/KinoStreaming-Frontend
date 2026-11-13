@@ -6,6 +6,7 @@ import { catchError, distinctUntilChanged, filter, map, of, switchMap, tap } fro
 import { AuthService } from '../../core/auth/auth.service';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
+import { formatCount } from '../../core/videos/video-format';
 
 @Component({
   selector: 'app-video-player',
@@ -103,8 +104,4 @@ export class VideoPlayerComponent implements OnInit {
     this.playbackMessage.set('No se pudo reproducir este archivo. Comprueba que la URL sea pública y compatible con el navegador.');
   }
 
-}
-
-function formatCount(count: number): string {
-  return new Intl.NumberFormat('es', { notation: 'compact', maximumFractionDigits: 1 }).format(count);
 }

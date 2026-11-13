@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of, Subject, throwError } from 'rxjs';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { CreateVideoRequest, CreatorAnalyticsResponse, VideoCardData } from '../../core/videos/video.models';
@@ -39,6 +40,18 @@ describe('CreatorStudioComponent', () => {
         }
       ]
     }).compileComponents();
+  });
+
+  it('switches to the live tab when the navbar link changes the query while the page is open', async () => {
+    TestBed.inject(Router).resetConfig([{ path: '', component: CreatorStudioComponent }]);
+    const harness = await RouterTestingHarness.create();
+    const component = await harness.navigateByUrl('/', CreatorStudioComponent);
+    expect(component.activeTab()).toBe('upload');
+
+    await harness.navigateByUrl('/?tab=live');
+
+    expect(component.activeTab()).toBe('live');
+    expect(harness.routeNativeElement?.querySelector('app-go-live-panel')).not.toBeNull();
   });
 
   it('deduplicates category tags without case or accent differences', () => {

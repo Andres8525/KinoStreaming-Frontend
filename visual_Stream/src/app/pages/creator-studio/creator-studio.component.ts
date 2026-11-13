@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { GoLivePanelComponent } from '../../components/go-live-panel/go-live-panel.component';
@@ -25,6 +26,7 @@ function isStudioTab(value: string | null): value is StudioTab {
 export class CreatorStudioComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly activeTab = signal<StudioTab>('upload');
   readonly videoTitle = signal('');
@@ -57,10 +59,14 @@ export class CreatorStudioComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    const requestedTab = this.route.snapshot.queryParamMap.get('tab');
-    if (isStudioTab(requestedTab)) {
-      this.activeTab.set(requestedTab);
-    }
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const requestedTab = params.get('tab');
+        if (isStudioTab(requestedTab)) {
+          this.activeTab.set(requestedTab);
+        }
+      });
     this.loadVideos();
     this.loadAnalytics();
   }

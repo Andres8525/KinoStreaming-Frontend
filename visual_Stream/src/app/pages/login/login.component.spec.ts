@@ -89,6 +89,43 @@ describe('LoginComponent', () => {
     expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent).toContain('no acepta peticiones desde');
   });
 
+  it('signs in automatically once the server answers again after a connection error', async () => {
+    const fixture = await setup();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    connectionErrorMessage.mockImplementation(async () => {
+      serverState.set('online');
+      return 'No se pudo conectar con el servidor de Kino.';
+    });
+    login
+      .mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 0, error: new ProgressEvent('error') })))
+      .mockReturnValue(of({}));
+    fixture.componentInstance.form.setValue({ email: 'viewer@example.com', password: 'secret-123' });
+
+    fixture.componentInstance.submit();
+    await fixture.whenStable();
+
+    expect(login).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenCalledWith('/');
+    expect(fixture.componentInstance.errorMessage()).toBe('');
+  });
+
+  it('retries only once when the server keeps failing', async () => {
+    const fixture = await setup();
+    connectionErrorMessage.mockImplementation(async () => {
+      serverState.set('online');
+      return 'No se pudo conectar con el servidor de Kino.';
+    });
+    login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+    fixture.componentInstance.form.setValue({ email: 'viewer@example.com', password: 'secret-123' });
+
+    fixture.componentInstance.submit();
+    await fixture.whenStable();
+    await fixture.whenStable();
+
+    expect(login).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.errorMessage()).toContain('No se pudo conectar');
+  });
+
   it('does not diagnose the connection for answers from the backend', async () => {
     const fixture = await setup();
     login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 401, error: { message: 'x' } })));

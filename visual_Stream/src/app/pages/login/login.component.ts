@@ -22,12 +22,18 @@ export class LoginComponent {
   readonly serverState = this.serverStatus.state;
   readonly errorMessage = signal('');
   readonly sessionExpired = this.route.snapshot.queryParamMap.has('expired');
+  private retriedAfterWakeUp = false;
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]],
     password: ['', Validators.required]
   });
 
   submit(): void {
+    this.retriedAfterWakeUp = false;
+    this.send();
+  }
+
+  private send(): void {
     if (this.form.invalid || this.submitting()) {
       this.form.markAllAsTouched();
       return;
@@ -47,7 +53,14 @@ export class LoginComponent {
         this.errorMessage.set(apiErrorMessage(error, 'No se pudo iniciar sesión. Inténtalo de nuevo.'));
         this.submitting.set(false);
         if (isConnectionError(error)) {
-          void this.serverStatus.connectionErrorMessage().then(message => this.errorMessage.set(message));
+          void this.serverStatus.connectionErrorMessage().then(message => {
+            if (this.serverStatus.state() === 'online' && !this.retriedAfterWakeUp) {
+              this.retriedAfterWakeUp = true;
+              this.send();
+              return;
+            }
+            this.errorMessage.set(message);
+          });
         }
       },
       complete: () => this.submitting.set(false)

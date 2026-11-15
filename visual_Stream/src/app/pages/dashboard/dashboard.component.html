@@ -50,7 +50,19 @@
       </div>
     </section>
   } @else if (isLoading()) {
-    <section class="hero-section dashboard-state" aria-live="polite">Cargando contenido de Kino…</section>
+    <section class="hero-section hero-skeleton" aria-live="polite" aria-busy="true">
+      <span class="sr-only">Cargando contenido de Kino…</span>
+      <div class="hero-container">
+        <div class="hero-content">
+          <div class="skeleton skeleton-badge"></div>
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-line"></div>
+          <div class="skeleton skeleton-line short"></div>
+          <div class="skeleton skeleton-button"></div>
+        </div>
+        <div class="skeleton skeleton-visual"></div>
+      </div>
+    </section>
   } @else {
     <section class="hero-section dashboard-state">
       <h1>Tu próxima historia empieza aquí</h1>
@@ -66,7 +78,7 @@
     <app-live-now [streams]="liveStreams()"/>
   }
 
-  <section class="categories-section">
+  <section class="categories-section" appReveal>
     <div class="section-container mx-auto w-full max-w-350 px-6">
       <div class="categories-scroll" aria-label="Filtrar por categoría">
         @for (category of categories(); track category) {
@@ -108,7 +120,7 @@
   }
 
   @if (searchTerm()) {
-    <section class="content-section">
+    <section class="content-section" appReveal>
       <div class="section-container mx-auto w-full max-w-350 px-6">
         <div class="section-header">
           <div class="section-title-group">
@@ -127,7 +139,7 @@
     </section>
   }
 
-  <section class="content-section">
+  <section class="content-section" appReveal>
     <div class="section-container mx-auto w-full max-w-350 px-6">
       <div class="section-header">
         <div class="section-title-group">
@@ -143,6 +155,16 @@
       <div class="video-carousel" id="recommended">
         @for (video of recommendedVideos(); track video.id; let i = $index) {
           <app-video-card [video]="video" [animationDelay]="i * 80" class="carousel-item"/>
+        } @empty {
+          @if (isLoading()) {
+            @for (card of skeletonCards; track card) {
+              <div class="carousel-item skeleton-card" aria-hidden="true">
+                <div class="skeleton skeleton-thumb"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line short"></div>
+              </div>
+            }
+          }
         }
       </div>
       @if (!isLoading() && recommendedVideos().length === 0) {
@@ -151,7 +173,7 @@
     </div>
   </section>
 
-  <section class="content-section section-alt">
+  <section class="content-section section-alt" appReveal>
     <div class="section-container mx-auto w-full max-w-350 px-6">
       <div class="section-header">
         <div class="section-title-group">
@@ -167,6 +189,16 @@
       <div class="video-carousel" id="trending">
         @for (video of trendingVideos(); track video.id; let i = $index) {
           <app-video-card [video]="video" [animationDelay]="i * 80" class="carousel-item"/>
+        } @empty {
+          @if (isLoading()) {
+            @for (card of skeletonCards; track card) {
+              <div class="carousel-item skeleton-card" aria-hidden="true">
+                <div class="skeleton skeleton-thumb"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line short"></div>
+              </div>
+            }
+          }
         }
       </div>
       @if (!isLoading() && trendingVideos().length === 0) {
@@ -179,7 +211,7 @@
     <app-ai-insights-panel [insights]="kinoInsights"/>
   }
 
-  <section class="cta-section">
+  <section class="cta-section" appReveal>
     <div class="section-container mx-auto w-full max-w-350 px-6">
       <div class="cta-card">
         <div class="cta-content">

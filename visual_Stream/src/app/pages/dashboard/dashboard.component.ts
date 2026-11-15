@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { AiInsightsPanelComponent } from '../../components/ai-insights-panel/ai-insights-panel.component';
 import { LiveNowComponent } from '../../components/live-now/live-now.component';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
+import { RevealDirective } from '../../core/ui/reveal.directive';
 import { AiInsightsService } from '../../core/ai/ai-insights.service';
 import { TrendingInsights } from '../../core/ai/ai-insights.models';
 import { LiveApiService } from '../../core/live/live-api.service';
@@ -18,7 +19,7 @@ import { VideoCardData } from '../../core/videos/video.models';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, VideoCardComponent, LiveNowComponent, AiInsightsPanelComponent],
+  imports: [CommonModule, RouterLink, VideoCardComponent, LiveNowComponent, AiInsightsPanelComponent, RevealDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -30,6 +31,7 @@ export class DashboardComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private pendingLoads = 0;
 
+  readonly skeletonCards = [0, 1, 2, 3];
   readonly categories = signal([ALL_CATEGORIES, ...VIDEO_CATEGORIES.map(category => category.name)]);
   readonly activeCategory = signal(ALL_CATEGORIES);
   readonly activeCategoryInfo = computed(() => findCategory(this.activeCategory()) ?? null);

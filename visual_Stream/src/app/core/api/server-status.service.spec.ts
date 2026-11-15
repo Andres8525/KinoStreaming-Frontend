@@ -52,6 +52,24 @@ describe('ServerStatusService', () => {
     expect(service.state()).toBe('online');
   });
 
+  it('keeps the backend warm while the page stays open', () => {
+    vi.useFakeTimers();
+    const subscription = service.keepWarm(1_000);
+
+    vi.advanceTimersByTime(1_000);
+    httpTesting.expectOne(`${API_BASE_URL}/health`).flush({ status: 'UP' });
+    expect(service.state()).toBe('online');
+
+    vi.advanceTimersByTime(1_000);
+    httpTesting.expectOne(`${API_BASE_URL}/health`).error(new ProgressEvent('error'));
+    expect(service.state()).toBe('offline');
+
+    subscription.unsubscribe();
+    vi.advanceTimersByTime(5_000);
+    httpTesting.expectNone(`${API_BASE_URL}/health`);
+    vi.useRealTimers();
+  });
+
   describe('diagnose', () => {
     afterEach(() => vi.restoreAllMocks());
 

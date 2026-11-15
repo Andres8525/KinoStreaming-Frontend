@@ -73,6 +73,14 @@ Vercel also serves every deployment on its own URL (`https://<project>-<hash>-<t
 
 Every account can publish and go live. Camera broadcasts use the public STUN servers listed in `iceServers` (`src/environments`); viewers on very restrictive networks (some corporate or mobile networks) may need a TURN server added there. Each viewer receives the video directly from the creator's browser, so the creator's upload bandwidth limits the audience (around 5–10 simultaneous viewers on a typical home connection); larger audiences should stream with OBS and HLS. Payments and file uploads are not implemented: videos are published by URL and must be publicly reachable in a browser-supported format such as MP4.
 
+## Motion and loading
+
+- Page changes use the View Transitions API through the Angular router (`withViewTransitions`); the navbar stays fixed while the page fades and slides in.
+- Dashboard sections appear as they scroll into view (`RevealDirective`, based on `IntersectionObserver`), and skeleton placeholders replace the hero and carousels while data loads.
+- The hero, live channels and Kino IA rankings enter with staggered animations; buttons, category pills and cards react to hover and press.
+- Every animation is disabled when the operating system asks for reduced motion (`prefers-reduced-motion`).
+- While the app is open in a visible tab it pings `/api/health` every 10 minutes, which complements the backend keep-alive workflow so Render does not go to sleep while people are using Kino.
+
 ## Project structure
 
 ```

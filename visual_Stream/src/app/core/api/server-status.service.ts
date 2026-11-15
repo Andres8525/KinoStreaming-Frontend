@@ -1,12 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { catchError, finalize, firstValueFrom, map, Observable, of, shareReplay, tap, timeout } from 'rxjs';
+import {
+  catchError, filter, finalize, firstValueFrom, interval, map, Observable, of, shareReplay, Subscription, switchMap, tap,
+  timeout
+} from 'rxjs';
 import { blockedOriginMessage, CONNECTION_ERROR_MESSAGE, localBackendMessage } from './api-error';
 import { API_BASE_URL } from './api.constants';
 
 export type ServerState = 'unknown' | 'waking' | 'online' | 'offline' | 'blocked';
 
 export const WAKE_UP_TIMEOUT_MS = 90_000;
+
+export const KEEP_WARM_INTERVAL_MS = 10 * 60_000;
 
 const LOCAL_API = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//;
 
@@ -33,6 +38,16 @@ export class ServerStatusService {
       );
     }
     return this.pending;
+  }
+
+  keepWarm(intervalMs = KEEP_WARM_INTERVAL_MS): Subscription {
+    return interval(intervalMs).pipe(
+      filter(() => typeof document === 'undefined' || document.visibilityState === 'visible'),
+      switchMap(() => this.http.get<{ status: string }>(`${API_BASE_URL}/health`).pipe(
+        map(health => health.status === 'UP'),
+        catchError(() => of(false))
+      ))
+    ).subscribe(online => this.state.set(online ? 'online' : 'offline'));
   }
 
   async diagnose(): Promise<ServerState> {

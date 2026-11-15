@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, inject, PLATFORM_ID } from '@angular/core';
+import { Component, DestroyRef, inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ServerStatusService } from './core/api/server-status.service';
@@ -16,7 +16,10 @@ export class App {
 
   constructor() {
     if (isPlatformBrowser(inject(PLATFORM_ID))) {
-      inject(ServerStatusService).wakeUp().subscribe();
+      const serverStatus = inject(ServerStatusService);
+      serverStatus.wakeUp().subscribe();
+      const keepWarm = serverStatus.keepWarm();
+      inject(DestroyRef).onDestroy(() => keepWarm.unsubscribe());
     }
   }
 }

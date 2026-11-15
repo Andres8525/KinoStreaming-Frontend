@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { provideRouter, TitleStrategy } from '@angular/router';
+import { provideRouter, TitleStrategy, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -12,7 +12,11 @@ import { KinoTitleStrategy } from './core/routing/kino-title.strategy';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withViewTransitions({ skipInitialTransition: true }),
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
+    ),
     { provide: TitleStrategy, useClass: KinoTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, retryInterceptor, unauthorizedInterceptor])),
     provideClientHydration(withEventReplay())

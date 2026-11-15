@@ -1,8 +1,8 @@
-import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from './api.constants';
-import { retryInterceptor } from './retry.interceptor';
+import { retryInterceptor, SKIP_RETRY } from './retry.interceptor';
 
 describe('retryInterceptor', () => {
   let http: HttpClient;
@@ -34,6 +34,17 @@ describe('retryInterceptor', () => {
     httpTesting.expectOne(url).flush([{ id: 'v1' }]);
 
     expect(result).toEqual([{ id: 'v1' }]);
+  });
+
+  it('does not retry requests that ask to skip retries', () => {
+    let error: HttpErrorResponse | undefined;
+    http.get(url, { context: new HttpContext().set(SKIP_RETRY, true) }).subscribe({ error: value => error = value });
+
+    httpTesting.expectOne(url).error(new ProgressEvent('error'));
+    vi.advanceTimersByTime(10_000);
+
+    httpTesting.expectNone(url);
+    expect(error?.status).toBe(0);
   });
 
   it('gives up after the configured retries', () => {

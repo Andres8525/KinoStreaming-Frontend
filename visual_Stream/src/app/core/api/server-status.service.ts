@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import {
   catchError, filter, finalize, firstValueFrom, interval, map, Observable, of, shareReplay, Subscription, switchMap, tap,
@@ -6,12 +6,15 @@ import {
 } from 'rxjs';
 import { blockedOriginMessage, CONNECTION_ERROR_MESSAGE, localBackendMessage } from './api-error';
 import { API_BASE_URL } from './api.constants';
+import { SKIP_RETRY } from './retry.interceptor';
 
 export type ServerState = 'unknown' | 'waking' | 'online' | 'offline' | 'blocked';
 
 export const WAKE_UP_TIMEOUT_MS = 90_000;
 
 export const KEEP_WARM_INTERVAL_MS = 10 * 60_000;
+
+export const DIAGNOSE_TIMEOUT_MS = 15_000;
 
 const LOCAL_API = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//;
 
@@ -51,11 +54,17 @@ export class ServerStatusService {
   }
 
   async diagnose(): Promise<ServerState> {
-    if (await firstValueFrom(this.wakeUp())) {
-      return 'online';
-    }
-    if (await this.answersIgnoringCors()) {
-      this.state.set('blocked');
+    const online = await firstValueFrom(this.http.get<{ status: string }>(`${API_BASE_URL}/health`, {
+      context: new HttpContext().set(SKIP_RETRY, true)
+    }).pipe(
+      timeout(DIAGNOSE_TIMEOUT_MS),
+      map(health => health.status === 'UP'),
+      catchError(() => of(false))
+    ));
+    if (online) {
+      this.state.set('online');
+    } else {
+      this.state.set(await this.answersIgnoringCors() ? 'blocked' : 'offline');
     }
     return this.state();
   }

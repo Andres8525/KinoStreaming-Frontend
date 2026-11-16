@@ -13,9 +13,19 @@
           @if (realtime()) {
             <span class="ai-live"><span class="ai-live-dot" aria-hidden="true"></span>En tiempo real</span>
           }
-          <span class="ai-source" [class.ai-source--ai]="insights().source === 'ai'">{{ sourceLabel() }}</span>
+          <span class="ai-source" [class.ai-source--ai]="current().source === 'ai'">{{ sourceLabel() }}</span>
+          <button type="button" class="ai-generate" [class.ai-generate--busy]="generating()" [disabled]="generating()"
+                  (click)="generateAnalysis()">
+            <span class="ai-generate-icon" aria-hidden="true">✦</span>
+            {{ generating() ? 'Generando análisis…' : 'Generar análisis' }}
+          </button>
         </div>
       </header>
+
+      @if (analysisMessage()) {
+        <p class="ai-analysis-status" [class.ai-analysis-status--error]="analysisFailed()"
+           [attr.role]="analysisFailed() ? 'alert' : 'status'">{{ analysisMessage() }}</p>
+      }
 
       <div class="ai-tabs" role="tablist" aria-label="Funciones de Kino IA">
         @for (tab of tabs; track tab.id; let index = $index) {
@@ -36,20 +46,23 @@
       @switch (activeTab()) {
         @case ('summary') {
           <div class="ai-tabpanel" role="tabpanel" id="ai-tabpanel-summary" aria-labelledby="ai-tab-summary">
-            <p class="ai-summary">{{ insights().summary }}</p>
+            <p class="ai-summary" [class.ai-summary--loading]="generating()">{{ current().summary }}</p>
+            <button type="button" class="ai-ask" (click)="selectTab('chat')">
+              ¿Tienes dudas? Pregúntale a Kino IA en el chat
+            </button>
 
             <dl class="ai-stats">
-              <div><dt>Reproducciones analizadas</dt><dd>{{ insights().totalViews | number }}</dd></div>
-              <div><dt>En vivo ahora</dt><dd>{{ insights().liveNow }}</dd></div>
-              <div><dt>Videos en tendencia</dt><dd>{{ insights().mostWatched.length }}</dd></div>
+              <div><dt>Reproducciones analizadas</dt><dd>{{ current().totalViews | number }}</dd></div>
+              <div><dt>En vivo ahora</dt><dd>{{ current().liveNow }}</dd></div>
+              <div><dt>Videos en tendencia</dt><dd>{{ current().mostWatched.length }}</dd></div>
             </dl>
 
             <div class="ai-columns">
               <div>
                 <h3 class="ai-column-title">Ranking de lo más visto</h3>
-                @if (insights().mostWatched.length) {
+                @if (current().mostWatched.length) {
                   <ol class="ai-ranking">
-                    @for (video of insights().mostWatched; track video.id; let position = $index) {
+                    @for (video of current().mostWatched; track video.id; let position = $index) {
                       <li>
                         <a [routerLink]="['/watch', video.id]" class="ai-rank-item">
                           <span class="ai-rank">{{ position + 1 }}</span>
@@ -68,9 +81,9 @@
 
               <div>
                 <h3 class="ai-column-title">Categorías más vistas</h3>
-                @if (insights().topCategories.length) {
+                @if (current().topCategories.length) {
                   <ul class="ai-categories">
-                    @for (category of insights().topCategories; track category.category) {
+                    @for (category of current().topCategories; track category.category) {
                       <li>
                         <div class="ai-category-row">
                           <span>{{ category.category }}</span>
@@ -86,10 +99,10 @@
                   <p class="ai-empty">Publica videos para ver categorías.</p>
                 }
 
-                @if (insights().rising.length) {
+                @if (current().rising.length) {
                   <h3 class="ai-column-title ai-rising-title">En ascenso esta semana</h3>
                   <ul class="ai-rising">
-                    @for (video of insights().rising; track video.id) {
+                    @for (video of current().rising; track video.id) {
                       <li><a [routerLink]="['/watch', video.id]">{{ video.title }}</a></li>
                     }
                   </ul>

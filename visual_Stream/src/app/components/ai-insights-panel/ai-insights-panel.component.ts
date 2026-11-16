@@ -1,5 +1,5 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { apiErrorMessage } from '../../core/api/api-error';
@@ -38,6 +38,7 @@ export class AiInsightsPanelComponent {
   private readonly engine = inject(RecommendationEngineService);
   private readonly watchHistory = inject(WatchHistoryService);
   private recommendationsRequest: Subscription | null = null;
+  private analysisRequest: Subscription | null = null;
   private rankingRun = 0;
 
   readonly insights = input.required<TrendingInsights>();
@@ -57,14 +58,18 @@ export class AiInsightsPanelComponent {
   readonly personalPicks = signal<PersonalCard[]>([]);
   readonly hasHistory = signal(false);
   readonly runsInWorker = this.engine.runsInWorker;
+  readonly current = linkedSignal(() => this.insights());
+  readonly generating = signal(false);
+  readonly analysisMessage = signal('');
+  readonly analysisFailed = signal(false);
 
   readonly sourceLabel = computed(() =>
-    this.insights().source === 'ai' ? 'Generado con Gemini IA' : 'Análisis automático de Kino');
+    this.current().source === 'ai' ? 'Generado con Gemini IA' : 'Análisis automático de Kino');
   readonly maxCategoryViews = computed(() =>
-    Math.max(1, ...this.insights().topCategories.map(category => category.totalViews)));
+    Math.max(1, ...this.current().topCategories.map(category => category.totalViews)));
   private readonly rankingSource = computed(() => {
     const catalog = this.catalog();
-    return catalog.length ? catalog : this.insights().mostWatched;
+    return catalog.length ? catalog : this.current().mostWatched;
   });
 
   constructor() {
@@ -77,7 +82,34 @@ export class AiInsightsPanelComponent {
         untracked(() => this.personalize(videos));
       }
     });
-    inject(DestroyRef).onDestroy(() => this.recommendationsRequest?.unsubscribe());
+    inject(DestroyRef).onDestroy(() => {
+      this.recommendationsRequest?.unsubscribe();
+      this.analysisRequest?.unsubscribe();
+    });
+  }
+
+  generateAnalysis(): void {
+    if (this.generating()) {
+      return;
+    }
+    this.generating.set(true);
+    this.analysisFailed.set(false);
+    this.analysisMessage.set('Kino IA está analizando lo más visto…');
+    this.analysisRequest = this.api.generateAnalysis().subscribe({
+      next: insights => {
+        this.current.set(insights);
+        this.activeTab.set('summary');
+        this.generating.set(false);
+        this.analysisMessage.set(insights.source === 'ai'
+          ? 'Análisis actualizado con Gemini IA.'
+          : 'Análisis actualizado con las estadísticas de Kino.');
+      },
+      error: (error: unknown) => {
+        this.generating.set(false);
+        this.analysisFailed.set(true);
+        this.analysisMessage.set(apiErrorMessage(error, 'No se pudo generar el análisis. Inténtalo de nuevo.'));
+      }
+    });
   }
 
   categoryWidth(views: number): number {

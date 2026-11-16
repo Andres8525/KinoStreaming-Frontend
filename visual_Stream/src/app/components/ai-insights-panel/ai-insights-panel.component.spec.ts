@@ -29,14 +29,16 @@ const RECOMMENDATIONS: AiRecommendations = {
 
 describe('AiInsightsPanelComponent', () => {
   let getRecommendations: ReturnType<typeof vi.fn>;
+  let generateAnalysis: ReturnType<typeof vi.fn>;
 
   async function setup(realtime = false) {
     getRecommendations = vi.fn().mockReturnValue(of(RECOMMENDATIONS));
+    generateAnalysis = vi.fn();
     await TestBed.configureTestingModule({
       imports: [AiInsightsPanelComponent],
       providers: [
         provideRouter([]),
-        { provide: AiInsightsService, useValue: { getRecommendations, chat: vi.fn() } },
+        { provide: AiInsightsService, useValue: { getRecommendations, generateAnalysis, chat: vi.fn() } },
         { provide: KinoSocketService, useValue: { status: signal('closed'), request: vi.fn() } },
         { provide: RECOMMENDATION_WORKER_FACTORY, useValue: () => null }
       ]
@@ -109,6 +111,41 @@ describe('AiInsightsPanelComponent', () => {
 
     expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent)
       .toContain('No se pudieron cargar las recomendaciones');
+  });
+
+  it('generates a fresh analysis with the "Generar análisis" button', async () => {
+    const fixture = await setup();
+    const element: HTMLElement = fixture.nativeElement;
+    generateAnalysis.mockReturnValue(of({ ...INSIGHTS, source: 'ai', summary: 'Nuevo análisis de Gemini' }));
+
+    element.querySelector<HTMLButtonElement>('.ai-generate')?.click();
+    fixture.detectChanges();
+
+    expect(generateAnalysis).toHaveBeenCalledTimes(1);
+    expect(element.querySelector('.ai-summary')?.textContent).toContain('Nuevo análisis de Gemini');
+    expect(element.querySelector('.ai-source')?.textContent).toContain('Generado con Gemini IA');
+    expect(element.querySelector('.ai-analysis-status')?.textContent).toContain('Análisis actualizado con Gemini IA');
+  });
+
+  it('explains when the analysis cannot be generated', async () => {
+    const fixture = await setup();
+    generateAnalysis.mockReturnValue(throwError(() => new Error('down')));
+
+    fixture.componentInstance.generateAnalysis();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role=alert]')?.textContent).toContain('No se pudo generar el análisis');
+    expect(fixture.componentInstance.generating()).toBe(false);
+  });
+
+  it('opens the chat from the summary shortcut', async () => {
+    const fixture = await setup();
+    const element: HTMLElement = fixture.nativeElement;
+
+    element.querySelector<HTMLButtonElement>('.ai-ask')?.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('app-ai-chat')).not.toBeNull();
   });
 
   it('opens the chat and marks real-time updates', async () => {

@@ -68,7 +68,13 @@ Vercel also serves every deployment on its own URL (`https://<project>-<hash>-<t
   - **Con mi cámara** (default): *Abrir cámara* asks for camera and microphone permission and shows a preview; *Empezar a transmitir* goes live. The tab answers each viewer through Kino's signaling endpoints and sends the video directly to them (it shows the number of connected viewers), so it must stay open while live; after a reload, *Reanudar cámara* continues the same broadcast.
   - **Con OBS (HLS)**: register the HLS playback URL of a stream sent with OBS to Cloudflare Stream, Mux, AWS IVS, nginx-rtmp…
 - **Categories**: choosing Cortometrajes, Documentales, Animación, Música, Videoclips, Experimental or Tutoriales shows what the category offers ("Aquí podrás encontrar…") and all its videos; an empty category invites creators to publish the first one. A video belongs to the category chosen when publishing it in Creator Studio.
-- **Kino IA**: dashboard panel with the most watched ranking, top categories, rising videos and a summary from `/api/ai/trending-insights`. It shows "Generado con Gemini IA" when the summary comes from Google Gemini and "Análisis automático de Kino" otherwise. Gemini is configured only in the backend (`AI_ENABLED`, `AI_PROVIDER=gemini`, `AI_API_KEY` in Render); the API key never reaches the frontend.
+- **Kino IA**: dashboard panel with four tabs. "Generado con Gemini IA" marks answers written by Google Gemini and "Análisis automático de Kino" marks Kino's own analysis. Gemini is configured only in the backend (`AI_ENABLED`, `AI_PROVIDER=gemini`, `AI_API_KEY` in Render); the API key never reaches the frontend.
+  - **Resumen**: summary, statistics, most watched ranking, top categories and rising videos from `/api/ai/trending-insights`.
+  - **Ver lo más visto**: the 10 most watched videos of the catalog with thumbnails and each video's share of all views.
+  - **Recomendaciones IA**: recommendations per category from `/api/ai/recommendations` with the reason for each video, plus a **Para ti** row ranked from the categories watched in this browser (the player keeps the last 30 videos in `localStorage`, nothing is sent to the server).
+  - **Chatear con Kino IA**: chat with the assistant (`/api/ai/chat`). Suggested questions, the last 12 messages as context, links to the videos mentioned in each answer and clear messages when the question limit is reached.
+- **Real time (WebSocket)**: the dashboard opens `wss://<backend>/ws/kino` (derived from `apiBaseUrl`). The backend pushes new Kino IA statistics as soon as they change, so the panel updates without reloading and shows "En tiempo real". Chat questions travel over the same socket; if it is closed or does not answer, the chat falls back to HTTP. The socket sends a ping every 25 s and reconnects with exponential backoff (1 s up to 30 s).
+- **Web Worker**: the most watched ranking and the **Para ti** scoring run in `recommendations.worker.ts`, off the main thread, so large catalogs do not block scrolling or animations. Where workers are unavailable (server-side rendering, very old browsers) the same code runs on the main thread.
 - **Not-found page** for unknown URLs and branded tab titles (`<page> · Kino`).
 
 Every account can publish and go live. Camera broadcasts use the public STUN servers listed in `iceServers` (`src/environments`); viewers on very restrictive networks (some corporate or mobile networks) may need a TURN server added there. Each viewer receives the video directly from the creator's browser, so the creator's upload bandwidth limits the audience (around 5–10 simultaneous viewers on a typical home connection); larger audiences should stream with OBS and HLS. Payments and file uploads are not implemented: videos are published by URL and must be publicly reachable in a browser-supported format such as MP4.
@@ -90,10 +96,12 @@ src/app/
     auth/       auth service, guards, interceptors, JWT helpers
     routing/    page title strategy
     text/       accent-insensitive text normalization
-    ai/         Kino IA trending insights client
+    ai/         Kino IA insights, recommendations and chat client
+    realtime/   WebSocket client with reconnection and request/reply matching
+    workers/    Web Worker ranking, scoring and watch history
     live/       live streaming client and models
     videos/     video API service, models and formatters
-  components/   navbar, video card, live-now strip, Kino IA panel, go-live panel
+  components/   navbar, video card, live-now strip, Kino IA panel and chat, go-live panel
   pages/        dashboard, video player, live watch, creator studio, login, register, not found
 src/environments/  API URL per build configuration
 ```

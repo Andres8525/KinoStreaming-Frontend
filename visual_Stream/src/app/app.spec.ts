@@ -31,5 +31,6 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-navbar')).not.toBeNull();
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
+    expect(compiled.querySelector('app-ai-chat-launcher .launcher-button')?.textContent).toContain('Kino IA');
   });
 });

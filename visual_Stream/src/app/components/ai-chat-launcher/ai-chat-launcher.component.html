@@ -1,0 +1,27 @@
+@if (open()) {
+  <section class="launcher-panel" role="dialog" aria-modal="false" aria-labelledby="kino-ai-chat-title">
+    <header class="launcher-header">
+      <div class="launcher-heading">
+        <span class="launcher-icon" aria-hidden="true">✦</span>
+        <div>
+          <h2 id="kino-ai-chat-title" class="launcher-title">Chat con Kino IA</h2>
+          <p class="launcher-subtitle">Pregunta qué ver, lo más visto o quién está en vivo</p>
+        </div>
+      </div>
+      <button type="button" class="launcher-close" (click)="close()" aria-label="Cerrar el chat de Kino IA">✕</button>
+    </header>
+    <app-ai-chat/>
+  </section>
+}
+
+<button
+  #launcherButton
+  type="button"
+  class="launcher-button"
+  [class.launcher-button--open]="open()"
+  [attr.aria-expanded]="open()"
+  [attr.aria-label]="open() ? 'Cerrar el chat de Kino IA' : 'Abrir el chat de Kino IA'"
+  (click)="toggle()">
+  <span class="launcher-button-icon" aria-hidden="true">{{ open() ? '✕' : '✦' }}</span>
+  <span class="launcher-button-label">{{ open() ? 'Cerrar' : 'Kino IA' }}</span>
+</button>

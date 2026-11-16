@@ -69,6 +69,8 @@ Vercel also serves every deployment on its own URL (`https://<project>-<hash>-<t
   - **Con OBS (HLS)**: register the HLS playback URL of a stream sent with OBS to Cloudflare Stream, Mux, AWS IVS, nginx-rtmp…
 - **Categories**: choosing Cortometrajes, Documentales, Animación, Música, Videoclips, Experimental or Tutoriales shows what the category offers ("Aquí podrás encontrar…") and all its videos; an empty category invites creators to publish the first one. A video belongs to the category chosen when publishing it in Creator Studio.
 - **Kino IA**: dashboard panel with four tabs. "Generado con Gemini IA" marks answers written by Google Gemini and "Análisis automático de Kino" marks Kino's own analysis. Gemini is configured only in the backend (`AI_ENABLED`, `AI_PROVIDER=gemini`, `AI_API_KEY` in Render); the API key never reaches the frontend.
+  - **Generar análisis** (panel header): asks `POST /api/ai/analysis` for a fresh analysis right away; the result also reaches every open dashboard over the WebSocket.
+  - **Chat button**: a floating **Kino IA** button on every page opens the chat in a side panel (Escape closes it).
   - **Resumen**: summary, statistics, most watched ranking, top categories and rising videos from `/api/ai/trending-insights`.
   - **Ver lo más visto**: the 10 most watched videos of the catalog with thumbnails and each video's share of all views.
   - **Recomendaciones IA**: recommendations per category from `/api/ai/recommendations` with the reason for each video, plus a **Para ti** row ranked from the categories watched in this browser (the player keeps the last 30 videos in `localStorage`, nothing is sent to the server).

@@ -9,6 +9,7 @@ import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
 import { formatCount } from '../../core/videos/video-format';
 import { APP_NAME } from '../../core/routing/kino-title.strategy';
+import { WatchHistoryService } from '../../core/workers/watch-history.service';
 
 @Component({
   selector: 'app-video-player',
@@ -24,6 +25,7 @@ export class VideoPlayerComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly title = inject(Title);
+  private readonly watchHistory = inject(WatchHistoryService);
 
   readonly video = signal<VideoCardData | null>(null);
   readonly relatedVideos = signal<VideoCardData[]>([]);
@@ -64,6 +66,7 @@ export class VideoPlayerComponent implements OnInit {
       }
 
       this.video.set(result.video);
+      this.watchHistory.record(result.video);
       this.title.setTitle(`${result.video.title} · ${APP_NAME}`);
       this.relatedVideos.set(result.relatedVideos);
       this.isLoading.set(false);

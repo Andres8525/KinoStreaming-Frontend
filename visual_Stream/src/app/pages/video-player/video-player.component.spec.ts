@@ -5,6 +5,7 @@ import { of, Subject } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
+import { WATCH_HISTORY_KEY, WatchHistoryService } from '../../core/workers/watch-history.service';
 import { VideoPlayerComponent } from './video-player.component';
 
 describe('VideoPlayerComponent', () => {
@@ -37,6 +38,8 @@ describe('VideoPlayerComponent', () => {
 
     expect(fixture.componentInstance.video()?.id).toBe('second');
     expect(TestBed.inject(Title).getTitle()).toBe('Video second · Kino');
+    expect(TestBed.inject(WatchHistoryService).entries().map(entry => entry.id)).toContain('second');
+    localStorage.removeItem(WATCH_HISTORY_KEY);
   });
 
   it('records a view only once per video and updates the counter', async () => {

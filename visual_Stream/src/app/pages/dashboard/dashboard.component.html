@@ -208,7 +208,7 @@
   </section>
 
   @if (insights(); as kinoInsights) {
-    <app-ai-insights-panel [insights]="kinoInsights"/>
+    <app-ai-insights-panel [insights]="kinoInsights" [catalog]="catalog()" [realtime]="realtime()"/>
   }
 
   <section class="cta-section" appReveal>

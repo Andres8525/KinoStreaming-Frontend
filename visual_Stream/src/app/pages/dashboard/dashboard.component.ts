@@ -7,8 +7,9 @@ import { AiInsightsPanelComponent } from '../../components/ai-insights-panel/ai-
 import { LiveNowComponent } from '../../components/live-now/live-now.component';
 import { VideoCardComponent } from '../../components/video-card/video-card.component';
 import { RevealDirective } from '../../core/ui/reveal.directive';
-import { AiInsightsService } from '../../core/ai/ai-insights.service';
-import { TrendingInsights } from '../../core/ai/ai-insights.models';
+import { AiInsightsService, toTrendingInsights } from '../../core/ai/ai-insights.service';
+import { TrendingInsights, TrendingInsightsResponse } from '../../core/ai/ai-insights.models';
+import { KinoSocketService } from '../../core/realtime/kino-socket.service';
 import { LiveApiService } from '../../core/live/live-api.service';
 import { LiveStreamData } from '../../core/live/live.models';
 import { normalizeText } from '../../core/text/normalize-text';
@@ -27,6 +28,7 @@ export class DashboardComponent implements OnInit {
   private readonly videoApi = inject(VideoApiService);
   private readonly liveApi = inject(LiveApiService);
   private readonly aiInsightsApi = inject(AiInsightsService);
+  private readonly socket = inject(KinoSocketService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private pendingLoads = 0;
@@ -44,6 +46,7 @@ export class DashboardComponent implements OnInit {
   readonly isLoading = signal(true);
   readonly errors = signal<string[]>([]);
   readonly notice = signal('');
+  readonly realtime = computed(() => this.socket.status() === 'open');
 
   readonly recommendedVideos = computed(() => this.filterVideos(this.recommendations()));
   readonly trendingVideos = computed(() => this.filterVideos(this.trending()));
@@ -68,6 +71,10 @@ export class DashboardComponent implements OnInit {
           : '');
       });
     this.loadContent();
+    this.socket.on<TrendingInsightsResponse>('insights')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(response => this.insights.set(toTrendingInsights(response)));
+    this.socket.connect();
   }
 
   reload(): void {

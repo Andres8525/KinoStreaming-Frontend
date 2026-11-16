@@ -5,6 +5,8 @@ import { vi } from 'vitest';
 import { AiInsightsService } from '../../core/ai/ai-insights.service';
 import { TrendingInsights } from '../../core/ai/ai-insights.models';
 import { LiveApiService } from '../../core/live/live-api.service';
+import { KinoSocketService, SocketStatus } from '../../core/realtime/kino-socket.service';
+import { signal, WritableSignal } from '@angular/core';
 import { LiveStreamData } from '../../core/live/live.models';
 import { VideoApiService } from '../../core/videos/video-api.service';
 import { VideoCardData } from '../../core/videos/video.models';
@@ -21,6 +23,8 @@ describe('DashboardComponent', () => {
   let queryParams: Subject<ParamMap>;
   let liveApi: { getLiveNow: ReturnType<typeof vi.fn> };
   let aiInsights: { getTrendingInsights: ReturnType<typeof vi.fn> };
+  let socketMessages: Subject<unknown>;
+  let socket: { status: WritableSignal<SocketStatus>; connect: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     queryParams = new Subject<ParamMap>();
@@ -31,6 +35,8 @@ describe('DashboardComponent', () => {
     };
     liveApi = { getLiveNow: vi.fn(() => of([] as LiveStreamData[])) };
     aiInsights = { getTrendingInsights: vi.fn(() => of(createInsights())) };
+    socketMessages = new Subject<unknown>();
+    socket = { status: signal<SocketStatus>('closed'), connect: vi.fn(), on: vi.fn(() => socketMessages.asObservable()) };
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
@@ -44,9 +50,27 @@ describe('DashboardComponent', () => {
           useValue: videoApi
         },
         { provide: LiveApiService, useValue: liveApi },
-        { provide: AiInsightsService, useValue: aiInsights }
+        { provide: AiInsightsService, useValue: aiInsights },
+        { provide: KinoSocketService, useValue: socket }
       ]
     }).compileComponents();
+  });
+
+  it('connects to Kino IA in real time and applies pushed insights', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+
+    socket.status.set('open');
+    socketMessages.next({
+      generatedAt: '2026-11-15T12:00:00Z', source: 'kino-analytics', summary: 'Actualizado en vivo',
+      mostWatched: [], rising: [], topCategories: [], totalViews: 99, liveNow: 1
+    });
+    fixture.detectChanges();
+
+    expect(socket.connect).toHaveBeenCalled();
+    expect(socket.on).toHaveBeenCalledWith('insights');
+    expect(fixture.componentInstance.insights()?.totalViews).toBe(99);
+    expect(fixture.componentInstance.realtime()).toBe(true);
   });
 
   it('matches search queries regardless of diacritics', () => {

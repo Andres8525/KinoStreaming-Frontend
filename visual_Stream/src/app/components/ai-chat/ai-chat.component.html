@@ -1,0 +1,72 @@
+<div class="chat">
+  <div class="chat-toolbar">
+    <span class="chat-status" [class.chat-status--live]="realtime()">
+      <span class="chat-status-dot" aria-hidden="true"></span>
+      {{ realtime() ? 'Conectado en tiempo real' : 'Conectado por HTTP' }}
+    </span>
+    @if (hasConversation()) {
+      <button type="button" class="chat-reset" (click)="reset()" [disabled]="sending()">Nueva conversación</button>
+    }
+  </div>
+
+  <div #log class="chat-log" role="log" aria-live="polite" aria-label="Conversación con Kino IA">
+    @for (entry of entries(); track entry.id) {
+      <div class="chat-row" [class.chat-row--user]="entry.role === 'user'">
+        @if (entry.role === 'assistant') {
+          <span class="chat-avatar" aria-hidden="true">✦</span>
+        }
+        <div class="chat-bubble" [class.chat-bubble--user]="entry.role === 'user'" [class.chat-bubble--error]="entry.failed">
+          <span class="sr-only">{{ entry.role === 'user' ? 'Tú:' : 'Kino IA:' }}</span>
+          <p class="chat-text">{{ entry.content }}</p>
+          @if (entry.suggestions.length) {
+            <ul class="chat-suggestions" aria-label="Videos sugeridos">
+              @for (video of entry.suggestions; track video.id) {
+                <li>
+                  <a [routerLink]="['/watch', video.id]" class="chat-suggestion">
+                    <img [src]="video.thumbnail" alt="" loading="lazy" width="64" height="36">
+                    <span>
+                      <span class="chat-suggestion-title">{{ video.title }}</span>
+                      <span class="chat-suggestion-meta">{{ video.creator }} · {{ video.views }} vistas</span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+          @if (entry.source === 'ai') {
+            <span class="chat-source">Respondido con Gemini IA</span>
+          }
+        </div>
+      </div>
+    }
+    @if (sending()) {
+      <div class="chat-row" aria-label="Kino IA está escribiendo">
+        <span class="chat-avatar" aria-hidden="true">✦</span>
+        <div class="chat-bubble chat-typing" aria-hidden="true"><span></span><span></span><span></span></div>
+      </div>
+    }
+  </div>
+
+  <div class="chat-prompts" aria-label="Preguntas sugeridas">
+    @for (prompt of quickPrompts; track prompt) {
+      <button type="button" class="chat-prompt" (click)="send(prompt)" [disabled]="sending()">{{ prompt }}</button>
+    }
+  </div>
+
+  <form class="chat-form" (submit)="$event.preventDefault(); send()">
+    <label for="kino-ai-question" class="sr-only">Escribe tu pregunta para Kino IA</label>
+    <textarea
+      id="kino-ai-question"
+      class="chat-input"
+      rows="1"
+      placeholder="Pregúntale algo a Kino IA…"
+      [maxLength]="maxLength"
+      [value]="draft()"
+      (input)="updateDraft($any($event.target).value)"
+      (keydown)="onKeydown($event)"></textarea>
+    <span class="chat-counter" [class.chat-counter--limit]="draft().length >= maxLength">{{ draft().length }}/{{ maxLength }}</span>
+    <button type="submit" class="chat-send" [disabled]="!canSend()">
+      {{ sending() ? 'Pensando…' : 'Enviar' }}
+    </button>
+  </form>
+</div>

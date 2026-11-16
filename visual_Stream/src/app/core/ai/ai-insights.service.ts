@@ -44,6 +44,12 @@ export class AiInsightsService {
     return this.http.get<TrendingInsightsResponse>(`${this.aiUrl}/trending-insights`).pipe(map(toTrendingInsights));
   }
 
+  generateAnalysis(): Observable<TrendingInsights> {
+    return this.http.post<TrendingInsightsResponse>(`${this.aiUrl}/analysis`, null, {
+      context: new HttpContext().set(SKIP_RETRY, true)
+    }).pipe(map(toTrendingInsights));
+  }
+
   getRecommendations(category?: string): Observable<AiRecommendations> {
     const params = category ? new HttpParams().set('category', category) : undefined;
     return this.http.get<AiRecommendationsResponse>(`${this.aiUrl}/recommendations`, { params })

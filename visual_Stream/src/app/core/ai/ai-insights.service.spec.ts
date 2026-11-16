@@ -52,6 +52,25 @@ describe('AiInsightsService', () => {
     httpTesting.verify();
   });
 
+  it('asks the backend to generate a fresh analysis', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(AiInsightsService);
+    const httpTesting = TestBed.inject(HttpTestingController);
+    let insights: TrendingInsights | undefined;
+
+    service.generateAnalysis().subscribe(result => insights = result);
+    const request = httpTesting.expectOne(`${API_BASE_URL}/ai/analysis`);
+    expect(request.request.method).toBe('POST');
+    request.flush({
+      generatedAt: '2026-11-15T12:00:00Z', source: 'ai', summary: 'Análisis nuevo', mostWatched: [VIDEO], rising: [],
+      topCategories: [], totalViews: 1500, liveNow: 0
+    });
+
+    expect(insights?.summary).toBe('Análisis nuevo');
+    expect(insights?.mostWatched[0].creator).toBe('Ana Ruiz');
+    httpTesting.verify();
+  });
+
   it('loads the recommendations of a category', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = TestBed.inject(AiInsightsService);

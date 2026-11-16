@@ -245,3 +245,255 @@
 .ai-rank-item:hover {
   transform: translateX(4px);
 }
+
+.ai-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.16);
+  color: #6ee7b7;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ai-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.ai-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.ai-tab {
+  flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e0e7ff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.ai-tab:hover {
+  border-color: #fcd34d;
+  transform: translateY(-1px);
+}
+
+.ai-tab:focus-visible,
+.ai-chip:focus-visible {
+  outline: 2px solid #fcd34d;
+  outline-offset: 2px;
+}
+
+.ai-tab--active {
+  border-color: #fcd34d;
+  background: #fcd34d;
+  color: #1e1b4b;
+}
+
+.ai-tabpanel {
+  margin-top: 4px;
+  animation: fade-in 0.35s ease both;
+}
+
+.ai-hint {
+  margin: 16px 0 12px;
+  color: #c7d2fe;
+  font-size: 13px;
+}
+
+.ai-summary--compact {
+  margin: 16px 0;
+  font-size: 15px;
+}
+
+.ai-top,
+.ai-personal,
+.ai-recommendations {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.ai-top-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  padding: 8px 10px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.ai-top-item:hover,
+.ai-top-item:focus-visible,
+.ai-recommendation:hover,
+.ai-recommendation:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.ai-top-item:hover {
+  transform: translateX(4px);
+}
+
+.ai-top-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ai-top-text .ai-bar {
+  margin-top: 2px;
+}
+
+.ai-share {
+  color: #fcd34d;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ai-thumb {
+  flex: none;
+  width: 96px;
+  height: 54px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-thumb--wide {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ai-chip {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: transparent;
+  color: #e0e7ff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ai-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-chip--active {
+  border-color: #fcd34d;
+  background: rgba(252, 211, 77, 0.18);
+  color: #fff;
+  font-weight: 700;
+}
+
+.ai-recommendations {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.ai-recommendation {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  height: 100%;
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.25s ease;
+}
+
+.ai-recommendation:hover {
+  transform: translateY(-3px);
+}
+
+.ai-reason {
+  color: #fcd34d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ai-skeleton {
+  min-height: 190px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06) 25%, rgba(255, 255, 255, 0.14) 50%, rgba(255, 255, 255, 0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.ai-error {
+  margin: 16px 0 10px;
+  color: #fecaca;
+}
+
+.ai-personal .ai-rank-item {
+  gap: 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .ai-top-item {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .ai-top-item .ai-thumb {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-tabpanel,
+  .ai-live-dot,
+  .ai-skeleton {
+    animation: none;
+  }
+
+  .ai-tab:hover,
+  .ai-top-item:hover,
+  .ai-recommendation:hover {
+    transform: none;
+  }
+}
